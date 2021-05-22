@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Playing with Swift and the Google API | fastpages</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Playing with Swift and the Google API" />
+<meta name="author" content="Conwyn" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="There was a Swift Tensorflow project which is no longer active. This notebook is design to support the exporting and importing of notebooks within Colab" />
+<meta property="og:description" content="There was a Swift Tensorflow project which is no longer active. This notebook is design to support the exporting and importing of notebooks within Colab" />
+<link rel="canonical" href="https://conwyn.github.io/MyBlogs/fastai/swift/googleapi/2021/05/22/SwiftExportImport.html" />
+<meta property="og:url" content="https://conwyn.github.io/MyBlogs/fastai/swift/googleapi/2021/05/22/SwiftExportImport.html" />
+<meta property="og:site_name" content="fastpages" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-05-22T00:00:00-05:00" />
+<script type="application/ld+json">
+{"description":"There was a Swift Tensorflow project which is no longer active. This notebook is design to support the exporting and importing of notebooks within Colab","url":"https://conwyn.github.io/MyBlogs/fastai/swift/googleapi/2021/05/22/SwiftExportImport.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://conwyn.github.io/MyBlogs/fastai/swift/googleapi/2021/05/22/SwiftExportImport.html"},"headline":"Playing with Swift and the Google API","dateModified":"2021-05-22T00:00:00-05:00","datePublished":"2021-05-22T00:00:00-05:00","author":{"@type":"Person","name":"Conwyn"},"@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/MyBlogs/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://conwyn.github.io/MyBlogs/feed.xml" title="fastpages" /><link rel="shortcut icon" type="image/x-icon" href="/MyBlogs/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/MyBlogs/">fastpages</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/MyBlogs/about/">About Me</a><a class="page-link" href="/MyBlogs/search/">Search</a><a class="page-link" href="/MyBlogs/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Playing with Swift and the Google API</h1><p class="page-description">There was a Swift Tensorflow project which is no longer active. This notebook is design to support the exporting and importing of notebooks within Colab</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-05-22T00:00:00-05:00" itemprop="datePublished">
+        May 22, 2021
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Conwyn</span></span>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      25 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/MyBlogs/categories/#fastai">fastai</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/MyBlogs/categories/#Swift">Swift</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/MyBlogs/categories/#GoogleAPI">GoogleAPI</a>
+        
+      
+      </p>
+    
+
+    
+      
+        <div class="pb-5 d-flex flex-wrap flex-justify-end">
+          <div class="px-2">
+
+    <a href="https://github.com/Conwyn/MyBlogs/tree/master/_notebooks/2021-05-22-SwiftExportImport.ipynb" role="button" target="_blank">
+<img class="notebook-badge-image" src="/MyBlogs/assets/badges/github.svg" alt="View On GitHub">
+    </a>
+</div>
+
+          <div class="px-2">
+    <a href="https://mybinder.org/v2/gh/Conwyn/MyBlogs/master?filepath=_notebooks%2F2021-05-22-SwiftExportImport.ipynb" target="_blank">
+        <img class="notebook-badge-image" src="/MyBlogs/assets/badges/binder.svg" alt="Open In Binder"/>
+    </a>
+</div>
+
+          <div class="px-2">
+    <a href="https://colab.research.google.com/github/Conwyn/MyBlogs/blob/master/_notebooks/2021-05-22-SwiftExportImport.ipynb" target="_blank">
+        <img class="notebook-badge-image" src="/MyBlogs/assets/badges/colab.svg" alt="Open In Colab"/>
+    </a>
+</div>
+        </div>
+      </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+</ul><!--
+#################################################
+### THIS FILE WAS AUTOGENERATED! DO NOT EDIT! ###
+#################################################
+# file to edit: _notebooks/2021-05-22-SwiftExportImport.ipynb
+-->
+
+<div class="container" id="notebook-container">
+        
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">install</span> '.package(url: "https://github.com/mxcl/Path.swift", from: "0.16.1")' Path
+<span class="o">%</span><span class="k">install</span> '.package(url: "https://github.com/IBM-Swift/Swift-JWT.git", from: "3.0.0")' SwiftJWT
+<span class="o">%</span><span class="k">install</span> '.package(url: "https://github.com/saeta/Just", from: "0.7.2")' Just
+<span class="o">%</span><span class="k">install</span> '.package(url: "https://github.com/latenitesoft/NotebookExport", from: "0.5.0")' NotebookExport
+
+
+<span class="kn">import</span> <span class="nn">Foundation</span>
+<span class="kn">import</span> <span class="nn">FoundationNetworking</span>
+<span class="kn">import</span> <span class="nn">Path</span>
+<span class="kn">import</span> <span class="nn">Just</span>
+<span class="kn">import</span> <span class="nn">SwiftJWT</span>
+<span class="kn">import</span> <span class="nn">NotebookExport</span>
+
+<span class="n">struct</span> <span class="n">MyClaims</span><span class="p">:</span> <span class="n">Claims</span> <span class="p">{</span>
+                 <span class="n">var</span> <span class="n">iss</span><span class="p">:</span> <span class="n">String</span>
+                 <span class="n">var</span>  <span class="n">aud</span><span class="p">:</span> <span class="n">String</span>
+                 <span class="n">var</span>  <span class="n">exp</span><span class="p">:</span> <span class="n">Date</span>  
+                 <span class="n">var</span> <span class="n">iat</span><span class="p">:</span> <span class="n">Date</span> 
+                 <span class="n">var</span> <span class="n">scope</span><span class="p">:</span> <span class="n">String</span><span class="p">}</span>
+
+<span class="n">public</span> <span class="n">extension</span> <span class="n">String</span> <span class="p">{</span>
+    <span class="nd">@discardableResult</span>
+    <span class="n">func</span> <span class="n">shell</span><span class="p">(</span><span class="n">_</span> <span class="n">args</span><span class="p">:</span> <span class="n">String</span><span class="o">...</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">String</span>
+    <span class="p">{</span>
+        <span class="n">let</span> <span class="p">(</span><span class="n">task</span><span class="p">,</span><span class="n">pipe</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span><span class="n">Process</span><span class="p">(),</span><span class="n">Pipe</span><span class="p">())</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">executableURL</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="n">fileURLWithPath</span><span class="p">:</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">arguments</span><span class="p">,</span><span class="n">task</span><span class="o">.</span><span class="n">standardOutput</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span><span class="n">args</span><span class="p">,</span><span class="n">pipe</span><span class="p">)</span>
+        <span class="n">do</span>    <span class="p">{</span> <span class="k">try</span> <span class="n">task</span><span class="o">.</span><span class="n">run</span><span class="p">()</span> <span class="p">}</span>
+        <span class="n">catch</span> <span class="p">{</span> <span class="nb">print</span><span class="p">(</span><span class="s2">"Unexpected error: \(error)."</span><span class="p">)</span> <span class="p">}</span>
+
+        <span class="n">let</span> <span class="n">data</span> <span class="o">=</span> <span class="n">pipe</span><span class="o">.</span><span class="n">fileHandleForReading</span><span class="o">.</span><span class="n">readDataToEndOfFile</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">String</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">data</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="n">String</span><span class="o">.</span><span class="n">Encoding</span><span class="o">.</span><span class="n">utf8</span><span class="p">)</span> <span class="err">??</span> <span class="s2">""</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Installing packages:
+	.package(url: "https://github.com/mxcl/Path.swift", from: "0.16.1")
+		Path
+	.package(url: "https://github.com/IBM-Swift/Swift-JWT.git", from: "3.0.0")
+		SwiftJWT
+	.package(url: "https://github.com/saeta/Just", from: "0.7.2")
+		Just
+	.package(url: "https://github.com/latenitesoft/NotebookExport", from: "0.5.0")
+		NotebookExport
+With SwiftPM flags: []
+Working in: /tmp/tmpwy1a0xtl/swift-install
+Fetching https://github.com/saeta/Just
+Fetching https://github.com/latenitesoft/NotebookExport
+Fetching https://github.com/IBM-Swift/Swift-JWT.git
+Fetching https://github.com/mxcl/Path.swift
+Fetching https://github.com/IBM-Swift/LoggerAPI.git
+Fetching https://github.com/IBM-Swift/KituraContracts.git
+Fetching https://github.com/IBM-Swift/BlueECC.git
+Fetching https://github.com/IBM-Swift/BlueCryptor.git
+Fetching https://github.com/IBM-Swift/BlueRSA.git
+Fetching https://github.com/IBM-Swift/OpenSSL.git
+Fetching https://github.com/apple/swift-log.git
+Cloning https://github.com/IBM-Swift/BlueECC.git
+Resolving https://github.com/IBM-Swift/BlueECC.git at 1.2.5
+Cloning https://github.com/saeta/Just
+Resolving https://github.com/saeta/Just at 0.7.3
+Cloning https://github.com/IBM-Swift/Swift-JWT.git
+Resolving https://github.com/IBM-Swift/Swift-JWT.git at 3.6.1
+Cloning https://github.com/IBM-Swift/OpenSSL.git
+Resolving https://github.com/IBM-Swift/OpenSSL.git at 2.2.2
+Cloning https://github.com/IBM-Swift/BlueRSA.git
+Resolving https://github.com/IBM-Swift/BlueRSA.git at 1.0.35
+Cloning https://github.com/apple/swift-log.git
+Resolving https://github.com/apple/swift-log.git at 1.4.0
+Cloning https://github.com/IBM-Swift/KituraContracts.git
+Resolving https://github.com/IBM-Swift/KituraContracts.git at 1.2.1
+Cloning https://github.com/mxcl/Path.swift
+Resolving https://github.com/mxcl/Path.swift at 0.16.3
+Cloning https://github.com/latenitesoft/NotebookExport
+Resolving https://github.com/latenitesoft/NotebookExport at 0.6.0
+Cloning https://github.com/IBM-Swift/LoggerAPI.git
+Resolving https://github.com/IBM-Swift/LoggerAPI.git at 1.9.0
+Cloning https://github.com/IBM-Swift/BlueCryptor.git
+Resolving https://github.com/IBM-Swift/BlueCryptor.git at 1.0.32
+[1/24] Compiling Path Extensions.swift
+[2/24] Compiling Path Path+Attributes.swift
+[3/24] Compiling Path Path+Codable.swift
+[4/25] Merging module Logging
+[5/26] Compiling Just Just.swift
+[8/26] Compiling Path Path+CommonDirectories.swift
+[9/26] Compiling Path Path+FileManager.swift
+[10/26] Compiling Path Path+StringConvertibles.swift
+[11/26] Compiling Path Path+ls.swift
+[12/26] Compiling Path Path-&gt;Bool.swift
+[13/26] Compiling Path Path.swift
+[14/27] Merging module Path
+[15/28] Compiling LoggerAPI Logger.swift
+[16/29] Merging module LoggerAPI
+[17/33] Compiling NotebookExport DependencyDescription.swift
+[18/33] Compiling NotebookExport ExtensionUtils.swift
+[19/33] Compiling NotebookExport NotebookExport.swift
+[20/33] Compiling NotebookExport PackageManifest.swift
+[21/34] Merging module NotebookExport
+[23/43] Merging module Just
+[24/52] Compiling KituraContracts BodyDecoder.swift
+[25/52] Compiling KituraContracts BodyEncoder.swift
+[26/52] Compiling KituraContracts BodyFormat.swift
+[27/52] Compiling KituraContracts ClosureAliases.swift
+[28/52] Compiling KituraContracts Coder.swift
+[34/52] Compiling KituraContracts Extensions.swift
+[35/52] Compiling KituraContracts QueryDecoder.swift
+[36/52] Compiling KituraContracts QueryEncoder.swift
+[37/53] Merging module CryptorRSA
+[38/64] Compiling CryptorECC ECPublicKey.swift
+[39/64] Compiling CryptorECC ECSignable.swift
+[40/64] Compiling CryptorECC ECSignature.swift
+[41/64] Compiling CryptorECC EllipticCurve.swift
+[42/64] Compiling CryptorECC SSLPointerTricks.swift
+[43/64] Compiling CryptorECC ECPrivateKey.swift
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1243:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .greaterThan
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1243:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .greaterThan
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1243:15: note: make the property mutable instead
+  private let `operator`: Operator = .greaterThan
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1290:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .greaterThanOrEqual
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1290:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .greaterThanOrEqual
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1290:15: note: make the property mutable instead
+  private let `operator`: Operator = .greaterThanOrEqual
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1338:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .lowerThan
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1338:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .lowerThan
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1338:15: note: make the property mutable instead
+  private let `operator`: Operator = .lowerThan
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1385:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .lowerThanOrEqual
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1385:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .lowerThanOrEqual
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1385:15: note: make the property mutable instead
+  private let `operator`: Operator = .lowerThanOrEqual
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1433:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .inclusiveRange
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1433:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .inclusiveRange
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1433:15: note: make the property mutable instead
+  private let `operator`: Operator = .inclusiveRange
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1487:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .exclusiveRange
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1487:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .exclusiveRange
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1487:15: note: make the property mutable instead
+  private let `operator`: Operator = .exclusiveRange
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1243:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .greaterThan
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1243:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .greaterThan
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1243:15: note: make the property mutable instead
+  private let `operator`: Operator = .greaterThan
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1290:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .greaterThanOrEqual
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1290:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .greaterThanOrEqual
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1290:15: note: make the property mutable instead
+  private let `operator`: Operator = .greaterThanOrEqual
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1338:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .lowerThan
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1338:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .lowerThan
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1338:15: note: make the property mutable instead
+  private let `operator`: Operator = .lowerThan
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1385:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .lowerThanOrEqual
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1385:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .lowerThanOrEqual
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1385:15: note: make the property mutable instead
+  private let `operator`: Operator = .lowerThanOrEqual
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1433:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .inclusiveRange
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1433:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .inclusiveRange
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1433:15: note: make the property mutable instead
+  private let `operator`: Operator = .inclusiveRange
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1487:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .exclusiveRange
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1487:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .exclusiveRange
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1487:15: note: make the property mutable instead
+  private let `operator`: Operator = .exclusiveRange
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1243:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .greaterThan
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1243:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .greaterThan
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1243:15: note: make the property mutable instead
+  private let `operator`: Operator = .greaterThan
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1290:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .greaterThanOrEqual
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1290:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .greaterThanOrEqual
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1290:15: note: make the property mutable instead
+  private let `operator`: Operator = .greaterThanOrEqual
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1338:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .lowerThan
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1338:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .lowerThan
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1338:15: note: make the property mutable instead
+  private let `operator`: Operator = .lowerThan
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1385:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .lowerThanOrEqual
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1385:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .lowerThanOrEqual
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1385:15: note: make the property mutable instead
+  private let `operator`: Operator = .lowerThanOrEqual
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1433:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .inclusiveRange
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1433:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .inclusiveRange
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1433:15: note: make the property mutable instead
+  private let `operator`: Operator = .inclusiveRange
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1487:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .exclusiveRange
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1487:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .exclusiveRange
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1487:15: note: make the property mutable instead
+  private let `operator`: Operator = .exclusiveRange
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1243:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .greaterThan
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1243:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .greaterThan
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1243:15: note: make the property mutable instead
+  private let `operator`: Operator = .greaterThan
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1290:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .greaterThanOrEqual
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1290:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .greaterThanOrEqual
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1290:15: note: make the property mutable instead
+  private let `operator`: Operator = .greaterThanOrEqual
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1338:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .lowerThan
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1338:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .lowerThan
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1338:15: note: make the property mutable instead
+  private let `operator`: Operator = .lowerThan
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1385:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .lowerThanOrEqual
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1385:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .lowerThanOrEqual
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1385:15: note: make the property mutable instead
+  private let `operator`: Operator = .lowerThanOrEqual
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1433:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .inclusiveRange
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1433:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .inclusiveRange
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1433:15: note: make the property mutable instead
+  private let `operator`: Operator = .inclusiveRange
+  ~~~~~~~     ^
+  var
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1487:15: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten
+  private let `operator`: Operator = .exclusiveRange
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1487:15: note: set the initial value via the initializer or explicitly define a CodingKeys enum including a 'operator' case to silence this warning
+  private let `operator`: Operator = .exclusiveRange
+              ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/KituraContracts/Sources/KituraContracts/Contracts.swift:1487:15: note: make the property mutable instead
+  private let `operator`: Operator = .exclusiveRange
+  ~~~~~~~     ^
+  var
+[47/65] Compiling CryptorECC ASN1.swift
+[48/65] Compiling CryptorECC Data+Extensions.swift
+[49/65] Compiling CryptorECC ECDecryptable.swift
+[50/65] Compiling CryptorECC ECEncryptable.swift
+[51/65] Compiling CryptorECC ECError.swift
+[53/66] Merging module KituraContracts
+[54/67] Merging module CryptorECC
+[55/69] Wrapping AST for Path for debugging
+[56/75] Wrapping AST for NotebookExport for debugging
+[57/77] Wrapping AST for Logging for debugging
+[58/77] Wrapping AST for LoggerAPI for debugging
+[59/77] Wrapping AST for KituraContracts for debugging
+[60/77] Wrapping AST for Just for debugging
+[61/77] Wrapping AST for CryptorRSA for debugging
+[62/77] Wrapping AST for CryptorECC for debugging
+[63/77] Compiling Cryptor Crypto.swift
+[64/77] Compiling Cryptor Cryptor.swift
+[65/77] Compiling Cryptor Digest.swift
+[66/77] Compiling Cryptor HMAC.swift
+[67/77] Compiling Cryptor KeyDerivation.swift
+[68/77] Compiling Cryptor Random.swift
+[69/77] Compiling Cryptor SSLPointerTricks.swift
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/BlueCryptor/Sources/Cryptor/StreamCryptor.swift:188:21: warning: static property 'none' produces an empty option set
+                public static let none = Options(rawValue: 0)
+                                  ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/BlueCryptor/Sources/Cryptor/StreamCryptor.swift:188:21: note: use [] to silence this warning
+                public static let none = Options(rawValue: 0)
+                                  ^             ~~~~~~~~~~~~~
+                                                ([])
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/BlueCryptor/Sources/Cryptor/Updatable.swift:68:4: warning: using '_' to ignore the result of a Void-returning function is redundant
+                        _ = data.withUnsafeBytes() {
+                        ^~~~
+                        
+[70/77] Compiling Cryptor Status.swift
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/BlueCryptor/Sources/Cryptor/StreamCryptor.swift:188:21: warning: static property 'none' produces an empty option set
+                public static let none = Options(rawValue: 0)
+                                  ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/BlueCryptor/Sources/Cryptor/StreamCryptor.swift:188:21: note: use [] to silence this warning
+                public static let none = Options(rawValue: 0)
+                                  ^             ~~~~~~~~~~~~~
+                                                ([])
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/BlueCryptor/Sources/Cryptor/Updatable.swift:68:4: warning: using '_' to ignore the result of a Void-returning function is redundant
+                        _ = data.withUnsafeBytes() {
+                        ^~~~
+                        
+[71/77] Compiling Cryptor StreamCryptor.swift
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/BlueCryptor/Sources/Cryptor/StreamCryptor.swift:188:21: warning: static property 'none' produces an empty option set
+                public static let none = Options(rawValue: 0)
+                                  ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/BlueCryptor/Sources/Cryptor/StreamCryptor.swift:188:21: note: use [] to silence this warning
+                public static let none = Options(rawValue: 0)
+                                  ^             ~~~~~~~~~~~~~
+                                                ([])
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/BlueCryptor/Sources/Cryptor/Updatable.swift:68:4: warning: using '_' to ignore the result of a Void-returning function is redundant
+                        _ = data.withUnsafeBytes() {
+                        ^~~~
+                        
+[72/77] Compiling Cryptor Updatable.swift
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/BlueCryptor/Sources/Cryptor/StreamCryptor.swift:188:21: warning: static property 'none' produces an empty option set
+                public static let none = Options(rawValue: 0)
+                                  ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/BlueCryptor/Sources/Cryptor/StreamCryptor.swift:188:21: note: use [] to silence this warning
+                public static let none = Options(rawValue: 0)
+                                  ^             ~~~~~~~~~~~~~
+                                                ([])
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/BlueCryptor/Sources/Cryptor/Updatable.swift:68:4: warning: using '_' to ignore the result of a Void-returning function is redundant
+                        _ = data.withUnsafeBytes() {
+                        ^~~~
+                        
+[73/77] Compiling Cryptor Utilities.swift
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/BlueCryptor/Sources/Cryptor/StreamCryptor.swift:188:21: warning: static property 'none' produces an empty option set
+                public static let none = Options(rawValue: 0)
+                                  ^
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/BlueCryptor/Sources/Cryptor/StreamCryptor.swift:188:21: note: use [] to silence this warning
+                public static let none = Options(rawValue: 0)
+                                  ^             ~~~~~~~~~~~~~
+                                                ([])
+/tmp/tmpwy1a0xtl/swift-install/package/.build/checkouts/BlueCryptor/Sources/Cryptor/Updatable.swift:68:4: warning: using '_' to ignore the result of a Void-returning function is redundant
+                        _ = data.withUnsafeBytes() {
+                        ^~~~
+                        
+[74/78] Merging module Cryptor
+[75/79] Wrapping AST for Cryptor for debugging
+[76/98] Compiling SwiftJWT JWTDecoder.swift
+[77/98] Compiling SwiftJWT JWTEncoder.swift
+[78/98] Compiling SwiftJWT JWTError.swift
+[79/98] Compiling SwiftJWT JWTSigner.swift
+[80/98] Compiling SwiftJWT JWTVerifier.swift
+[81/98] Compiling SwiftJWT NoneAlgorithm.swift
+[82/98] Compiling SwiftJWT RSAKeyType.swift
+[83/98] Compiling SwiftJWT SignerAlgorithm.swift
+[84/98] Compiling SwiftJWT ValidateClaimsResult.swift
+[85/98] Compiling SwiftJWT VerifierAlgorithm.swift
+[86/98] Compiling SwiftJWT BlueECDSA.swift
+[87/98] Compiling SwiftJWT BlueHMAC.swift
+[88/98] Compiling SwiftJWT BlueRSA.swift
+[89/98] Compiling SwiftJWT Claims.swift
+[90/98] Compiling SwiftJWT ClaimsMicroProfile.swift
+[91/98] Compiling SwiftJWT ClaimsOpenID.swift
+[92/98] Compiling SwiftJWT ClaimsStandardJWT.swift
+[93/98] Compiling SwiftJWT Data+Base64URLEncoded.swift
+[94/98] Compiling SwiftJWT Header.swift
+[95/98] Compiling SwiftJWT JWT.swift
+[96/99] Merging module SwiftJWT
+[97/100] Wrapping AST for SwiftJWT for debugging
+[98/100] Compiling jupyterInstalledPackages jupyterInstalledPackages.swift
+[99/101] Merging module jupyterInstalledPackages
+[100/101] Wrapping AST for jupyterInstalledPackages for debugging
+[101/101] Linking libjupyterInstalledPackages.so
+Initializing Swift...
+Installation complete!
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">func</span> <span class="n">GCEGetNotebookName</span><span class="p">()</span><span class="o">-&gt;</span><span class="p">(</span><span class="n">String</span><span class="p">,</span><span class="n">String</span><span class="p">){</span>
+ 
+<span class="n">var</span> <span class="n">notebookName</span><span class="p">:</span><span class="n">String</span> <span class="o">=</span> <span class="s2">""</span>
+<span class="n">var</span> <span class="n">notebookFileid</span><span class="p">:</span><span class="n">String</span> <span class="o">=</span> <span class="s2">""</span>
+<span class="n">let</span> <span class="n">urllist</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="s2">"http://172.28.0.2:9000/api/sessions"</span><span class="p">)</span>
+<span class="n">var</span> <span class="n">request</span> <span class="o">=</span> <span class="n">URLRequest</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="n">urllist</span><span class="o">!)</span>
+<span class="n">request</span><span class="o">.</span><span class="n">httpMethod</span> <span class="o">=</span> <span class="s2">"GET"</span>
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">"application/x-www-form-urlencoded"</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"Content-Type: text/html; charset=utf-8"</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">semaphorel</span> <span class="o">=</span> <span class="n">DispatchSemaphore</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">taskl</span> <span class="o">=</span> <span class="n">URLSession</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="n">dataTask</span><span class="p">(</span><span class="k">with</span><span class="p">:</span> <span class="n">request</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">data</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">error</span> <span class="ow">in</span>
+    <span class="o">//</span> <span class="n">Do</span> <span class="n">something</span>
+      <span class="k">if</span> <span class="n">let</span> <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">{</span>     
+<span class="k">if</span> <span class="n">let</span> <span class="n">ArrayDictionary</span> <span class="o">=</span> <span class="k">try</span><span class="err">?</span> <span class="n">JSONSerialization</span><span class="o">.</span><span class="n">jsonObject</span><span class="p">(</span><span class="k">with</span><span class="p">:</span> 
+ <span class="n">data</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="p">[])</span> <span class="k">as</span><span class="err">?</span> <span class="p">[[</span><span class="n">String</span><span class="p">:</span> <span class="n">Any</span> <span class="p">]]</span> <span class="p">{</span>  
+   <span class="n">notebookName</span> <span class="o">=</span> <span class="n">ArrayDictionary</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"name"</span><span class="p">]</span> <span class="k">as</span><span class="o">!</span> String
+   <span class="n">notebookFileid</span> <span class="o">=</span> <span class="n">ArrayDictionary</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"path"</span><span class="p">]</span> <span class="k">as</span><span class="o">!</span> String
+                                         <span class="p">}</span>
+    <span class="p">}</span>    
+    <span class="k">if</span> <span class="n">let</span> <span class="n">httpResponse</span> <span class="o">=</span> <span class="n">response</span> <span class="k">as</span><span class="err">?</span> <span class="n">HTTPURLResponse</span> <span class="p">{</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">httpResponse</span><span class="o">.</span><span class="n">statusCode</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="n">semaphorel</span><span class="o">.</span><span class="n">signal</span><span class="p">()</span>
+  <span class="p">}</span>
+<span class="n">taskl</span><span class="o">.</span><span class="n">resume</span><span class="p">()</span>
+ <span class="n">semaphorel</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span> 
+ <span class="k">return</span> <span class="p">(</span><span class="n">notebookName</span><span class="p">,</span><span class="n">notebookFileid</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">func</span> <span class="n">GCEGetAccessToken</span><span class="p">(</span><span class="n">privateKey</span><span class="p">:</span> <span class="n">Data</span><span class="p">,</span> <span class="n">emailName</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="n">signedJWT</span><span class="p">:</span> <span class="n">String</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">Data</span>
+<span class="p">{</span>
+<span class="n">let</span> <span class="n">debugMyCode</span><span class="p">:</span><span class="n">Bool</span> <span class="o">=</span> <span class="n">true</span>
+<span class="n">let</span> <span class="n">semaphore</span> <span class="o">=</span> <span class="n">DispatchSemaphore</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">parameters</span><span class="p">:</span> <span class="p">[</span><span class="n">String</span><span class="p">:</span> <span class="n">String</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"grant_type"</span><span class="p">:</span> <span class="s2">"urn:ietf:params:oauth:grant-type:jwt-bearer"</span><span class="p">,</span>
+    <span class="s2">"assertion"</span><span class="p">:</span>  <span class="n">signedJWT</span><span class="p">]</span>
+
+<span class="n">let</span> <span class="n">url</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="s2">"https://oauth2.googleapis.com/token"</span><span class="p">)</span>
+
+<span class="n">var</span> <span class="n">request</span> <span class="o">=</span> <span class="n">URLRequest</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="n">url</span><span class="o">!)</span>
+<span class="n">request</span><span class="o">.</span><span class="n">httpMethod</span> <span class="o">=</span> <span class="s2">"POST"</span>
+
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">"application/x-www-form-urlencoded"</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"Content-Type: text/html; charset=utf-8"</span><span class="p">)</span> 
+
+
+
+<span class="n">request</span><span class="o">.</span><span class="n">httpBody</span> <span class="o">=</span> <span class="n">parameters</span>
+    <span class="o">.</span><span class="n">map</span> <span class="p">{</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span>
+        <span class="k">return</span> <span class="s2">"\(key)=\(value)"</span>
+    <span class="p">}</span>
+    <span class="o">.</span><span class="n">joined</span><span class="p">(</span><span class="n">separator</span><span class="p">:</span> <span class="s2">"&amp;"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">using</span><span class="p">:</span> <span class="o">.</span><span class="n">utf8</span><span class="p">)</span>
+
+
+
+
+<span class="n">var</span> <span class="n">dataReturned</span><span class="p">:</span><span class="n">Data</span> <span class="o">=</span> <span class="n">Data</span><span class="p">()</span>
+
+<span class="n">let</span> <span class="n">task</span> <span class="o">=</span> <span class="n">URLSession</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="n">dataTask</span><span class="p">(</span><span class="k">with</span><span class="p">:</span> <span class="n">request</span><span class="p">)</span> <span class="p">{</span> 
+
+  <span class="n">data</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">error</span> <span class="ow">in</span>
+    <span class="o">//</span> <span class="n">Do</span> <span class="n">something</span>
+      <span class="k">if</span> <span class="n">let</span> <span class="n">data</span> <span class="o">=</span> <span class="n">data</span> <span class="p">{</span>      
+      <span class="n">dataReturned</span> <span class="o">=</span> <span class="n">data</span><span class="p">}</span>   
+                                                                   
+    <span class="k">if</span> <span class="n">let</span> <span class="n">httpResponse</span> <span class="o">=</span> <span class="n">response</span> <span class="k">as</span><span class="err">?</span> <span class="n">HTTPURLResponse</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">debugMyCode</span><span class="p">)</span> <span class="p">{</span><span class="nb">print</span><span class="p">(</span><span class="n">httpResponse</span><span class="o">.</span><span class="n">statusCode</span><span class="p">)}</span>
+    <span class="p">}</span>
+    <span class="n">semaphore</span><span class="o">.</span><span class="n">signal</span><span class="p">()</span>
+  
+<span class="p">}</span> <span class="o">//</span> <span class="n">URL</span>
+<span class="n">task</span><span class="o">.</span><span class="n">resume</span><span class="p">()</span>
+ <span class="n">semaphore</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+ <span class="k">return</span> <span class="n">dataReturned</span>
+<span class="p">}</span>
+
+<span class="n">public</span> <span class="n">func</span> <span class="n">GCEGetFile</span><span class="p">(</span><span class="n">fileid</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span>  <span class="n">authorizationToken</span><span class="p">:</span> <span class="n">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Data</span>
+<span class="p">{</span>
+<span class="n">let</span> <span class="n">urllistdown</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="s2">"https://www.googleapis.com/drive/v3/files/"</span> <span class="o">+</span> <span class="n">fileid</span> <span class="o">+</span> <span class="s2">"?alt=media"</span><span class="p">)</span>
+   <span class="n">var</span> <span class="n">request</span> <span class="o">=</span> <span class="n">URLRequest</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="n">urllistdown</span><span class="o">!)</span>
+   <span class="n">request</span><span class="o">.</span><span class="n">httpMethod</span> <span class="o">=</span> <span class="s2">"GET"</span>
+   <span class="n">var</span> <span class="n">downloadedData</span><span class="p">:</span><span class="n">Data</span> <span class="o">=</span> <span class="n">Data</span><span class="p">()</span>
+   <span class="n">let</span> <span class="n">authorizationTokenWithBearerString</span> <span class="o">=</span> <span class="s2">"Bearer "</span> <span class="o">+</span> <span class="n">authorizationToken</span>
+   <span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">authorizationTokenWithBearerString</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"Authorization"</span><span class="p">)</span> 
+  
+   <span class="n">let</span> <span class="n">semaphoredown</span>  <span class="o">=</span> <span class="n">DispatchSemaphore</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="mi">0</span><span class="p">)</span>
+   <span class="n">let</span> <span class="n">taskdown</span> <span class="o">=</span> <span class="n">URLSession</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="n">dataTask</span><span class="p">(</span><span class="k">with</span><span class="p">:</span> <span class="n">request</span><span class="p">)</span> <span class="p">{</span> 
+   <span class="n">data</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">error</span> <span class="ow">in</span>
+    <span class="o">//</span> <span class="n">Do</span> <span class="n">something</span>
+      <span class="k">if</span> <span class="n">let</span> <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">{</span> <span class="n">downloadedData</span> <span class="o">=</span> <span class="n">data</span><span class="p">}</span>
+      <span class="k">if</span> <span class="n">let</span> <span class="n">httpResponse</span> <span class="o">=</span> <span class="n">response</span> <span class="k">as</span><span class="err">?</span> <span class="n">HTTPURLResponse</span> <span class="p">{</span>
+      <span class="nb">print</span><span class="p">(</span><span class="n">httpResponse</span><span class="o">.</span><span class="n">statusCode</span><span class="p">)</span>
+           <span class="p">}</span>
+    <span class="n">semaphoredown</span><span class="o">.</span><span class="n">signal</span><span class="p">()</span>
+    <span class="p">}</span><span class="o">//</span><span class="n">url</span>
+   <span class="n">taskdown</span><span class="o">.</span><span class="n">resume</span><span class="p">()</span>
+   <span class="n">semaphoredown</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+   <span class="k">return</span> <span class="n">downloadedData</span>
+ <span class="p">}</span><span class="o">//</span> <span class="n">end</span> <span class="n">of</span> <span class="n">function</span> 
+
+
+ <span class="n">func</span> <span class="n">GCEGAT</span><span class="p">(</span><span class="n">myjson</span><span class="p">:</span> <span class="p">[</span><span class="n">String</span><span class="p">:</span><span class="n">String</span><span class="p">])</span><span class="o">-&gt;</span><span class="n">String</span> <span class="p">{</span>
+
+
+
+
+
+<span class="o">//</span>
+<span class="n">let</span> <span class="n">ce</span> <span class="o">=</span> <span class="n">myjson</span><span class="p">[</span><span class="s2">"client_email"</span><span class="p">]</span><span class="err">!</span>
+<span class="n">let</span> <span class="n">myClaims</span> <span class="o">=</span>  <span class="n">MyClaims</span><span class="p">(</span><span class="n">iss</span><span class="p">:</span> <span class="n">ce</span><span class="p">,</span>
+                 <span class="n">aud</span><span class="p">:</span> <span class="s2">"https://oauth2.googleapis.com/token"</span><span class="p">,</span>
+                 <span class="n">exp</span><span class="p">:</span> <span class="n">Date</span><span class="p">(</span><span class="n">timeIntervalSinceNow</span><span class="p">:</span><span class="mi">3600</span><span class="p">),</span>
+                 <span class="n">iat</span><span class="p">:</span> <span class="n">Date</span><span class="p">(</span><span class="n">timeIntervalSinceNow</span><span class="p">:</span><span class="mi">0</span><span class="p">),</span>
+                 <span class="n">scope</span><span class="p">:</span> <span class="s2">"https://www.googleapis.com/auth/drive"</span><span class="p">)</span>
+
+<span class="n">let</span> <span class="n">myheader</span> <span class="o">=</span> <span class="n">Header</span><span class="p">(</span><span class="n">typ</span><span class="p">:</span><span class="s2">"JWT"</span><span class="p">)</span>
+
+<span class="n">var</span> <span class="n">jwt</span> <span class="o">=</span> <span class="n">JWT</span><span class="p">(</span><span class="n">header</span><span class="p">:</span> <span class="n">myheader</span><span class="p">,</span> 
+<span class="n">claims</span><span class="p">:</span> <span class="n">myClaims</span><span class="p">)</span>
+
+
+
+
+<span class="n">let</span> <span class="n">secret</span><span class="p">:</span><span class="n">Data</span><span class="o">=</span><span class="n">myjson</span><span class="p">[</span><span class="s2">"private_key"</span><span class="p">]</span><span class="o">!</span>.data<span class="o">(</span>using: .utf8<span class="o">)</span>!
+
+
+<span class="n">let</span> <span class="n">signedJWT</span><span class="p">:</span><span class="n">String</span> <span class="o">=</span> <span class="k">try</span><span class="o">!</span> jwt.sign<span class="o">(</span>using: .rs256<span class="o">(</span>privateKey: secret<span class="o">))</span>
+
+<span class="n">let</span> <span class="n">dataReturned</span> <span class="o">=</span> <span class="n">GCEGetAccessToken</span><span class="p">(</span><span class="n">privateKey</span><span class="p">:</span> <span class="n">secret</span><span class="p">,</span><span class="n">emailName</span><span class="p">:</span> <span class="n">ce</span><span class="p">,</span> <span class="n">signedJWT</span><span class="p">:</span> <span class="n">signedJWT</span><span class="p">)</span>
+
+<span class="n">var</span> <span class="n">myjsonToken</span><span class="p">:</span> <span class="p">[</span><span class="n">String</span><span class="p">:</span> <span class="n">String</span><span class="p">]</span> <span class="o">=</span> <span class="p">[:]</span>
+<span class="k">if</span> <span class="n">let</span> <span class="n">jsonToken1</span> <span class="o">=</span> <span class="k">try</span><span class="err">?</span> <span class="n">JSONSerialization</span><span class="o">.</span><span class="n">jsonObject</span><span class="p">(</span><span class="k">with</span><span class="p">:</span> 
+ <span class="n">dataReturned</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="p">[])</span> <span class="k">as</span><span class="err">?</span> <span class="p">[</span><span class="n">String</span><span class="p">:</span> <span class="n">Any</span>   <span class="p">]</span> <span class="p">{</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">jsonToken1</span> <span class="p">{</span>
+    <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"key=  \(key) value = \(value)"</span><span class="p">)</span>
+    <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"type \(type(of: value))"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="n">String</span><span class="p">)</span> <span class="p">{</span><span class="n">myjsonToken</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">value</span> <span class="k">as</span><span class="o">!</span> String<span class="o">)}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">value</span>           <span class="ow">is</span> <span class="n">NSNumber</span><span class="p">)</span> <span class="p">{</span><span class="n">myjsonToken</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">String</span><span class="p">((</span><span class="n">value</span> <span class="k">as</span><span class="o">!</span> Int     <span class="o">))}</span>
+<span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">let</span> <span class="n">authorizationTokenValue</span><span class="p">:</span><span class="n">String</span><span class="o">=</span><span class="n">myjsonToken</span><span class="p">[</span><span class="s2">"access_token"</span><span class="p">]</span><span class="o">!</span> 
+<span class="k">return</span> <span class="n">authorizationTokenValue</span>
+<span class="p">}</span>
+
+<span class="n">func</span> <span class="n">GCEWriteFileLocal</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="n">dd</span><span class="p">:</span> <span class="n">Data</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">String</span>
+<span class="p">{</span>
+<span class="n">let</span> <span class="n">path</span> <span class="o">=</span> <span class="n">FileManager</span><span class="o">.</span><span class="n">default</span><span class="o">.</span><span class="n">currentDirectoryPath</span>
+<span class="n">let</span> <span class="n">pathNBn</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">appendingPathComponent</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">URLpathNBn</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="n">fileURLWithPath</span><span class="p">:</span> <span class="n">pathNBn</span><span class="p">)</span> 
+<span class="n">do</span> <span class="p">{</span>
+     <span class="k">try</span> <span class="n">dd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">to</span><span class="p">:</span> <span class="n">URLpathNBn</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="o">.</span><span class="n">atomic</span><span class="p">)</span>
+   <span class="p">}</span>
+<span class="n">catch</span> <span class="p">{</span><span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="p">)}</span>
+<span class="k">return</span> <span class="s2">"OK"</span>
+<span class="p">}</span>
+
+
+<span class="n">func</span>  <span class="n">GCEReadDirectory</span><span class="p">(</span><span class="n">authorizationToken</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="n">searchName</span><span class="p">:</span><span class="n">String</span><span class="p">)</span><span class="o">-&gt;</span><span class="p">[[</span><span class="n">String</span><span class="p">:</span><span class="n">String</span><span class="p">]]</span>
+<span class="p">{</span><span class="n">let</span> <span class="n">query</span> <span class="o">=</span> <span class="s2">"mimeType = </span><span class="se">\'</span><span class="s2">application/vnd.google-apps.folder</span><span class="se">\'</span><span class="s2"> and name contains </span><span class="se">\'</span><span class="s2">"</span><span class="o">+</span><span class="n">searchName</span><span class="o">+</span><span class="s2">"</span><span class="se">\'</span><span class="s2">"</span>
+<span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">URLString</span> <span class="o">=</span> <span class="s2">"https://www.googleapis.com/drive/v3/files?fields=kind,incompleteSearch,files(kind,id,name,mimeType,modifiedTime)&amp;q=\(query)"</span>
+  <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">URLString</span><span class="p">)</span>
+  <span class="n">let</span> <span class="n">encodedURL</span> <span class="o">=</span> <span class="n">URLString</span><span class="o">.</span><span class="n">addingPercentEncoding</span><span class="p">(</span><span class="n">withAllowedCharacters</span><span class="p">:</span> <span class="o">.</span><span class="n">urlQueryAllowed</span><span class="p">)</span>
+  <span class="n">let</span> <span class="n">urllist</span> <span class="o">=</span>  <span class="n">URL</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="n">encodedURL</span><span class="o">!)</span>
+  <span class="n">var</span> <span class="n">request</span> <span class="o">=</span> <span class="n">URLRequest</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="n">urllist</span><span class="o">!)</span>
+
+<span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"TRY REQUEST"</span><span class="p">)</span>
+<span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"REQUEST OK"</span><span class="p">)</span>
+<span class="n">request</span><span class="o">.</span><span class="n">httpMethod</span> <span class="o">=</span> <span class="s2">"GET"</span>
+<span class="n">let</span> <span class="n">authorizationTokenWithBearerString</span> <span class="o">=</span> <span class="s2">"Bearer "</span> <span class="o">+</span>  <span class="n">authorizationToken</span>
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">"application/x-www-form-urlencoded"</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"Content-Type: text/html; charset=utf-8"</span><span class="p">)</span>
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">authorizationTokenWithBearerString</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"Authorization"</span><span class="p">)</span> 
+<span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"\(request.httpMethod ?? "") \(String(describing:request.url))"</span><span class="p">)</span>
+ <span class="o">//</span>       <span class="nb">print</span><span class="p">(</span><span class="s2">"HEADERS </span><span class="se">\n</span><span class="s2"> \(String(describing:request.allHTTPHeaderFields))"</span><span class="p">)</span>
+
+<span class="n">let</span> <span class="n">semaphorel</span> <span class="o">=</span> <span class="n">DispatchSemaphore</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="mi">0</span><span class="p">)</span>
+<span class="o">//</span><span class="n">var</span> <span class="n">filelistDictionary</span> <span class="p">:</span> <span class="p">[</span><span class="n">String</span><span class="p">:</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[:]</span>
+<span class="o">//</span><span class="n">var</span> <span class="n">filelistArray</span><span class="p">:</span> <span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">var</span> <span class="n">filelistArrayDictionary</span><span class="p">:</span> <span class="p">[[</span><span class="n">String</span><span class="p">:</span><span class="n">String</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="n">let</span> <span class="n">taskl</span> <span class="o">=</span> <span class="n">URLSession</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="n">dataTask</span><span class="p">(</span><span class="k">with</span><span class="p">:</span> <span class="n">request</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">data</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">error</span> <span class="ow">in</span>
+    <span class="o">//</span> <span class="n">Do</span> <span class="n">something</span>
+    <span class="k">if</span> <span class="n">let</span> <span class="n">httpResponse</span> <span class="o">=</span> <span class="n">response</span> <span class="k">as</span><span class="err">?</span> <span class="n">HTTPURLResponse</span> <span class="p">{</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">httpResponse</span><span class="o">.</span><span class="n">statusCode</span><span class="p">)</span>
+    <span class="p">}</span>
+      <span class="k">if</span> <span class="n">let</span> <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">{</span>
+     
+<span class="k">if</span> <span class="n">let</span> <span class="n">filelistDictionary</span> <span class="o">=</span> <span class="k">try</span><span class="err">?</span> <span class="n">JSONSerialization</span><span class="o">.</span><span class="n">jsonObject</span><span class="p">(</span><span class="k">with</span><span class="p">:</span> 
+ <span class="n">data</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="p">[])</span> <span class="k">as</span><span class="err">?</span> <span class="p">[</span><span class="n">String</span><span class="p">:</span> <span class="n">Any</span>   <span class="p">]</span> <span class="p">{</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">filelistDictionary</span> <span class="p">{</span>
+    <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"key=  \(key) value = \(value)"</span><span class="p">)</span>
+    <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"type \(type(of: value))"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="n">Array</span><span class="o">&lt;</span><span class="n">Any</span><span class="o">&gt;</span> <span class="p">{</span>
+                           <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"Array key = \(key)"</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">let</span> <span class="n">filelistArray</span> <span class="o">=</span> <span class="n">filelistDictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]{</span>
+                            <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"Type \(type(of: filelistArray))"</span><span class="p">)</span>
+                            <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">filelistArray</span><span class="p">)</span>
+                            <span class="n">filelistArrayDictionary</span> <span class="o">=</span> <span class="n">filelistArray</span> <span class="k">as</span><span class="o">!</span>  <span class="o">[[</span>String:String<span class="o">]]</span>
+                             <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">filelistArrayDictionary</span><span class="p">)</span>
+                             
+                           <span class="p">}</span>
+<span class="p">}</span>
+       <span class="p">}</span>
+<span class="o">//</span>
+    <span class="p">}</span> 
+    <span class="k">if</span> <span class="n">let</span> <span class="n">httpResponse</span> <span class="o">=</span> <span class="n">response</span> <span class="k">as</span><span class="err">?</span> <span class="n">HTTPURLResponse</span> <span class="p">{</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">httpResponse</span><span class="o">.</span><span class="n">statusCode</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="n">semaphorel</span><span class="o">.</span><span class="n">signal</span><span class="p">()</span>
+  <span class="p">}}</span>
+<span class="n">taskl</span><span class="o">.</span><span class="n">resume</span><span class="p">()</span>
+ <span class="n">semaphorel</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+ <span class="k">return</span> <span class="n">filelistArrayDictionary</span>
+ <span class="p">}</span>
+
+
+<span class="n">func</span> <span class="n">GCECreateFolder</span><span class="p">(</span><span class="n">parentfolderid</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="n">NotebookName</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="n">authorizationToken</span><span class="p">:</span> <span class="n">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">String</span>
+<span class="p">{</span><span class="n">let</span> <span class="n">urlu</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="s2">"https://www.googleapis.com/drive/v3/files?"</span><span class="p">)</span>
+<span class="n">var</span> <span class="n">request</span> <span class="o">=</span> <span class="n">URLRequest</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="n">urlu</span><span class="o">!)</span>
+<span class="n">var</span> <span class="n">mylocation</span> <span class="o">=</span> <span class="s2">""</span>
+<span class="n">var</span> <span class="n">myFolderId</span> <span class="o">=</span> <span class="s2">""</span>
+<span class="n">request</span><span class="o">.</span><span class="n">httpMethod</span> <span class="o">=</span> <span class="s2">"POST"</span>
+<span class="n">let</span> <span class="n">metaData</span><span class="p">:</span> <span class="p">[</span><span class="n">String</span><span class="p">:</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"name"</span><span class="p">:</span> <span class="n">NotebookName</span><span class="p">,</span>
+    <span class="s2">"parents"</span><span class="p">:</span>  <span class="p">[</span><span class="n">parentfolderid</span><span class="p">],</span>
+    <span class="s2">"mimeType"</span><span class="p">:</span> <span class="s2">"application/vnd.google-apps.folder"</span>
+<span class="p">]</span>
+<span class="n">let</span> <span class="n">authorizationTokenWithBearerString</span> <span class="o">=</span> <span class="s2">"Bearer "</span> <span class="o">+</span> <span class="n">authorizationToken</span>
+<span class="n">let</span> <span class="n">jsonMetaData</span> <span class="o">=</span> <span class="k">try</span><span class="err">?</span> <span class="n">JSONSerialization</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">withJSONObject</span><span class="p">:</span> <span class="n">metaData</span><span class="p">)</span> 
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">"application/json"</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"Content-Type"</span><span class="p">)</span> 
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">authorizationTokenWithBearerString</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"Authorization"</span><span class="p">)</span> 
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">"\(jsonMetaData!.count)"</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"Content-Length"</span><span class="p">)</span>
+
+<span class="n">request</span><span class="o">.</span><span class="n">httpBody</span> <span class="o">=</span> <span class="n">jsonMetaData</span><span class="err">!</span>
+
+
+<span class="n">let</span> <span class="n">semaphoreupload</span> <span class="o">=</span> <span class="n">DispatchSemaphore</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">taskupload</span> <span class="o">=</span> <span class="n">URLSession</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="n">dataTask</span><span class="p">(</span><span class="k">with</span><span class="p">:</span> <span class="n">request</span><span class="p">)</span> <span class="p">{</span> 
+  <span class="n">data</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">error</span> <span class="ow">in</span>
+    <span class="o">//</span> <span class="n">Do</span> <span class="n">something</span>
+      <span class="k">if</span> <span class="n">let</span> <span class="n">data</span> <span class="o">=</span> <span class="n">data</span>  <span class="p">{</span>
+         <span class="k">if</span> <span class="n">let</span> <span class="n">filelistDictionary</span> <span class="o">=</span> <span class="k">try</span><span class="err">?</span> <span class="n">JSONSerialization</span><span class="o">.</span><span class="n">jsonObject</span><span class="p">(</span><span class="k">with</span><span class="p">:</span> 
+               <span class="n">data</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="p">[])</span> <span class="k">as</span><span class="err">?</span> <span class="p">[</span><span class="n">String</span><span class="p">:</span> <span class="n">String</span>   <span class="p">]</span> <span class="p">{</span>
+               
+               <span class="n">myFolderId</span> <span class="o">=</span> <span class="n">filelistDictionary</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span><span class="o">!}</span>
+              
+      <span class="p">}</span>
+      <span class="k">if</span> <span class="n">let</span> <span class="n">httpResponse</span> <span class="o">=</span> <span class="n">response</span> <span class="k">as</span><span class="err">?</span> <span class="n">HTTPURLResponse</span> <span class="p">{</span>
+      <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">httpResponse</span><span class="o">.</span><span class="n">statusCode</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">let</span> <span class="n">location</span> <span class="o">=</span> <span class="n">httpResponse</span><span class="o">.</span><span class="n">allHeaderFields</span><span class="p">[</span><span class="s2">"Location"</span><span class="p">]</span> <span class="k">as</span><span class="err">?</span> <span class="n">String</span>
+         <span class="p">{</span><span class="n">mylocation</span> <span class="o">=</span> <span class="n">location</span><span class="p">}</span>        
+      <span class="p">}</span>
+    <span class="n">semaphoreupload</span><span class="o">.</span><span class="n">signal</span><span class="p">()</span>
+<span class="p">}</span><span class="o">//</span><span class="n">url</span>
+   <span class="n">taskupload</span><span class="o">.</span><span class="n">resume</span><span class="p">()</span>
+   <span class="n">semaphoreupload</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+   <span class="k">return</span> <span class="n">myFolderId</span>
+<span class="p">}</span>
+
+
+
+<span class="n">func</span> <span class="n">GCELocalFileRead</span><span class="p">(</span><span class="n">atPath</span><span class="p">:</span> <span class="n">String</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">Data</span>
+<span class="p">{</span>
+<span class="n">var</span> <span class="n">newdd</span><span class="p">:</span> <span class="n">Data</span><span class="o">=</span><span class="n">Data</span><span class="p">()</span>
+<span class="n">let</span> <span class="n">path</span> <span class="o">=</span> <span class="n">FileManager</span><span class="o">.</span><span class="n">default</span><span class="o">.</span><span class="n">currentDirectoryPath</span>
+<span class="n">let</span> <span class="n">pathNBt</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">appendingPathComponent</span><span class="p">(</span><span class="n">atPath</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">URLpathNBt</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="n">fileURLWithPath</span><span class="p">:</span> <span class="n">pathNBt</span><span class="p">)</span> 
+<span class="n">do</span> <span class="p">{</span>
+     <span class="k">try</span> <span class="n">newdd</span> <span class="o">=</span> <span class="n">Data</span><span class="p">(</span><span class="n">contentsOf</span><span class="p">:</span> <span class="n">URLpathNBt</span><span class="p">)</span>
+   <span class="p">}</span>
+<span class="n">catch</span> <span class="p">{</span><span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="p">)}</span>
+<span class="k">return</span> <span class="n">newdd</span>
+<span class="p">}</span>
+<span class="n">func</span> <span class="n">GCEPostUpload</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="n">folderid</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="n">authCode</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="n">uploadData</span><span class="p">:</span> <span class="n">Data</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">String</span>
+<span class="p">{</span>
+  <span class="n">var</span> <span class="n">mylocation</span><span class="p">:</span> <span class="n">String</span> <span class="o">=</span> <span class="s2">""</span>
+<span class="n">var</span> <span class="n">myFolderId</span><span class="p">:</span> <span class="n">String</span> <span class="o">=</span> <span class="s2">""</span>
+<span class="n">let</span> <span class="n">urlu</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="s2">"https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable"</span><span class="p">)</span>
+<span class="n">var</span> <span class="n">request</span> <span class="o">=</span> <span class="n">URLRequest</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="n">urlu</span><span class="o">!)</span>
+
+<span class="n">request</span><span class="o">.</span><span class="n">httpMethod</span> <span class="o">=</span> <span class="s2">"POST"</span>
+<span class="n">let</span> <span class="n">metaData</span><span class="p">:</span> <span class="p">[</span><span class="n">String</span><span class="p">:</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+    <span class="s2">"parents"</span><span class="p">:</span>  <span class="p">[</span><span class="n">folderid</span><span class="p">]</span>
+<span class="p">]</span>
+<span class="n">let</span> <span class="n">jsonMetaData</span> <span class="o">=</span> <span class="k">try</span><span class="err">?</span> <span class="n">JSONSerialization</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">withJSONObject</span><span class="p">:</span> <span class="n">metaData</span><span class="p">)</span> 
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">"application/json"</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"Content-Type"</span><span class="p">)</span> 
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">"Bearer "</span><span class="o">+</span><span class="n">authCode</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"Authorization"</span><span class="p">)</span> 
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">"\(jsonMetaData!.count)"</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"Content-Length"</span><span class="p">)</span>
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">"image/jpeg"</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"X-Upload-Content-Type"</span><span class="p">)</span>
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">"\(uploadData.count)"</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"X-Upload-Content-Length"</span><span class="p">)</span>
+<span class="n">request</span><span class="o">.</span><span class="n">httpBody</span> <span class="o">=</span> <span class="n">jsonMetaData</span><span class="err">!</span>
+
+
+
+<span class="n">let</span> <span class="n">semaphoreupload</span> <span class="o">=</span> <span class="n">DispatchSemaphore</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">taskupload</span> <span class="o">=</span> <span class="n">URLSession</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="n">dataTask</span><span class="p">(</span><span class="k">with</span><span class="p">:</span> <span class="n">request</span><span class="p">)</span> <span class="p">{</span> 
+  <span class="n">data</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">error</span> <span class="ow">in</span>
+    <span class="o">//</span> <span class="n">Do</span> <span class="n">something</span>
+      <span class="k">if</span> <span class="n">let</span> <span class="n">data</span> <span class="o">=</span> <span class="n">data</span> <span class="p">{</span>
+        <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">dataString</span><span class="p">)</span>       
+         <span class="k">if</span> <span class="n">let</span> <span class="n">filelistDictionary</span> <span class="o">=</span> <span class="k">try</span><span class="err">?</span> <span class="n">JSONSerialization</span><span class="o">.</span><span class="n">jsonObject</span><span class="p">(</span><span class="k">with</span><span class="p">:</span> 
+               <span class="n">data</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="p">[])</span> <span class="k">as</span><span class="err">?</span> <span class="p">[</span><span class="n">String</span><span class="p">:</span> <span class="n">String</span>   <span class="p">]</span> <span class="p">{</span>               
+               <span class="n">myFolderId</span> <span class="o">=</span> <span class="n">filelistDictionary</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span><span class="o">!}</span>
+              
+      <span class="p">}</span>
+           
+      <span class="k">if</span> <span class="n">let</span> <span class="n">httpResponse</span> <span class="o">=</span> <span class="n">response</span> <span class="k">as</span><span class="err">?</span> <span class="n">HTTPURLResponse</span> <span class="p">{</span>
+      <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">httpResponse</span><span class="o">.</span><span class="n">statusCode</span><span class="p">)</span>
+      <span class="k">for</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span> <span class="ow">in</span> <span class="n">httpResponse</span><span class="o">.</span><span class="n">allHeaderFields</span> <span class="p">{</span>
+                                                 <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+                                                <span class="p">}</span>
+      <span class="k">if</span> <span class="n">let</span> <span class="n">location</span> <span class="o">=</span> <span class="n">httpResponse</span><span class="o">.</span><span class="n">allHeaderFields</span><span class="p">[</span><span class="s2">"Location"</span><span class="p">]</span> <span class="k">as</span><span class="err">?</span> <span class="n">String</span>
+          <span class="p">{</span><span class="n">mylocation</span> <span class="o">=</span> <span class="n">location</span><span class="p">}</span>     
+      <span class="p">}</span>
+    <span class="n">semaphoreupload</span><span class="o">.</span><span class="n">signal</span><span class="p">()</span>
+<span class="p">}</span><span class="o">//</span><span class="n">url</span>
+   <span class="n">taskupload</span><span class="o">.</span><span class="n">resume</span><span class="p">()</span>
+   <span class="n">semaphoreupload</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+<span class="o">//</span><span class="nb">print</span> <span class="p">(</span><span class="s2">"Location = \(mylocation) Folder = \(myFolderId)"</span><span class="p">)</span>
+<span class="k">return</span> <span class="n">mylocation</span>
+<span class="p">}</span>
+<span class="n">func</span> <span class="n">GCEPut</span> <span class="p">(</span><span class="n">location</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="n">newdd</span><span class="p">:</span> <span class="n">Data</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">Data</span>
+<span class="p">{</span>
+
+
+<span class="o">//*</span>
+<span class="n">let</span> <span class="n">urlup</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="n">location</span><span class="p">)</span>
+<span class="n">var</span> <span class="n">request</span> <span class="o">=</span> <span class="n">URLRequest</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="n">urlup</span><span class="o">!)</span>
+<span class="n">request</span><span class="o">.</span><span class="n">httpMethod</span> <span class="o">=</span> <span class="s2">"PUT"</span>
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">"\(newdd.count)"</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"Content-Length"</span><span class="p">)</span>
+<span class="n">request</span><span class="o">.</span><span class="n">httpBody</span> <span class="o">=</span> <span class="n">newdd</span>
+<span class="n">var</span> <span class="n">returnData</span><span class="p">:</span><span class="n">Data</span> <span class="o">=</span> <span class="n">Data</span><span class="p">()</span>
+<span class="o">//</span>                   
+<span class="n">let</span> <span class="n">semaphoreuploadput</span> <span class="o">=</span> <span class="n">DispatchSemaphore</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">taskuploadput</span> <span class="o">=</span> <span class="n">URLSession</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="n">dataTask</span><span class="p">(</span><span class="k">with</span><span class="p">:</span> <span class="n">request</span><span class="p">)</span> <span class="p">{</span> 
+  <span class="n">data</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">error</span> <span class="ow">in</span>
+    <span class="o">//</span> <span class="n">Do</span> <span class="n">something</span>
+      <span class="k">if</span> <span class="n">let</span> <span class="n">data</span> <span class="o">=</span> <span class="n">data</span> <span class="p">{</span><span class="n">returnData</span> <span class="o">=</span> <span class="n">data</span><span class="p">}</span>
+    
+      <span class="k">if</span> <span class="n">let</span> <span class="n">httpResponse</span> <span class="o">=</span> <span class="n">response</span> <span class="k">as</span><span class="err">?</span> <span class="n">HTTPURLResponse</span> <span class="p">{</span>
+      <span class="nb">print</span><span class="p">(</span><span class="n">httpResponse</span><span class="o">.</span><span class="n">statusCode</span><span class="p">)</span>
+      
+      <span class="p">}</span>
+    <span class="n">semaphoreuploadput</span><span class="o">.</span><span class="n">signal</span><span class="p">()</span>
+<span class="p">}</span><span class="o">//</span><span class="n">url</span>
+   <span class="n">taskuploadput</span><span class="o">.</span><span class="n">resume</span><span class="p">()</span>
+   <span class="n">semaphoreuploadput</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+<span class="k">return</span> <span class="n">returnData</span>
+<span class="p">}</span>
+
+
+<span class="n">func</span> <span class="n">GCEReadDirectoryforFiles</span><span class="p">(</span><span class="n">authorizationToken</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="n">searchName</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span><span class="n">folder</span><span class="p">:</span> <span class="n">String</span><span class="p">)</span><span class="o">-&gt;</span><span class="p">[[</span><span class="n">String</span><span class="p">:</span><span class="n">String</span><span class="p">]]</span>
+<span class="p">{</span><span class="n">let</span> <span class="n">query</span> <span class="o">=</span> <span class="s2">"name contains </span><span class="se">\'</span><span class="s2">"</span> <span class="o">+</span> <span class="n">searchName</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\'</span><span class="s2"> and </span><span class="se">\'</span><span class="s2">"</span>  <span class="o">+</span> <span class="n">folder</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\'</span><span class="s2"> in parents"</span> 
+<span class="n">let</span> <span class="n">URLString</span> <span class="o">=</span> <span class="s2">"https://www.googleapis.com/drive/v3/files?fields=kind,incompleteSearch,files(kind,id,name,mimeType,modifiedTime)&amp;q=\(query)"</span>
+  <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">URLString</span><span class="p">)</span>
+  <span class="n">let</span> <span class="n">encodedURL</span> <span class="o">=</span> <span class="n">URLString</span><span class="o">.</span><span class="n">addingPercentEncoding</span><span class="p">(</span><span class="n">withAllowedCharacters</span><span class="p">:</span> <span class="o">.</span><span class="n">urlQueryAllowed</span><span class="p">)</span>
+  <span class="n">let</span> <span class="n">urllist</span> <span class="o">=</span>  <span class="n">URL</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="n">encodedURL</span><span class="o">!)</span>
+<span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"TRY REQUEST"</span><span class="p">)</span>
+<span class="n">var</span> <span class="n">request</span> <span class="o">=</span> <span class="n">URLRequest</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="n">urllist</span><span class="o">!)</span>
+<span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"REQUEST OK"</span><span class="p">)</span>
+<span class="n">request</span><span class="o">.</span><span class="n">httpMethod</span> <span class="o">=</span> <span class="s2">"GET"</span>
+<span class="n">let</span> <span class="n">authorizationTokenWithBearerString</span> <span class="o">=</span> <span class="s2">"Bearer "</span> <span class="o">+</span>  <span class="n">authorizationToken</span>
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">"application/x-www-form-urlencoded"</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"Content-Type: text/html; charset=utf-8"</span><span class="p">)</span>
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">authorizationTokenWithBearerString</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"Authorization"</span><span class="p">)</span> 
+<span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"\(request.httpMethod ?? "") \(String(describing:request.url))"</span><span class="p">)</span>
+ <span class="o">//</span>       <span class="nb">print</span><span class="p">(</span><span class="s2">"HEADERS </span><span class="se">\n</span><span class="s2"> \(String(describing:request.allHTTPHeaderFields))"</span><span class="p">)</span>
+
+<span class="n">let</span> <span class="n">semaphorel</span> <span class="o">=</span> <span class="n">DispatchSemaphore</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="mi">0</span><span class="p">)</span>
+<span class="o">//</span><span class="n">var</span> <span class="n">filelistDictionary</span> <span class="p">:</span> <span class="p">[</span><span class="n">String</span><span class="p">:</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[:]</span>
+<span class="o">//</span><span class="n">var</span> <span class="n">filelistArray</span><span class="p">:</span> <span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">var</span> <span class="n">filelistArrayDictionary</span><span class="p">:</span> <span class="p">[[</span><span class="n">String</span><span class="p">:</span><span class="n">String</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="n">let</span> <span class="n">taskl</span> <span class="o">=</span> <span class="n">URLSession</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="n">dataTask</span><span class="p">(</span><span class="k">with</span><span class="p">:</span> <span class="n">request</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">data</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">error</span> <span class="ow">in</span>
+    <span class="o">//</span> <span class="n">Do</span> <span class="n">something</span>
+    <span class="k">if</span> <span class="n">let</span> <span class="n">httpResponse</span> <span class="o">=</span> <span class="n">response</span> <span class="k">as</span><span class="err">?</span> <span class="n">HTTPURLResponse</span> <span class="p">{</span>
+   <span class="nb">print</span><span class="p">(</span><span class="n">httpResponse</span><span class="o">.</span><span class="n">statusCode</span><span class="p">)</span>
+    <span class="p">}</span>
+      <span class="k">if</span> <span class="n">let</span> <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">{</span>
+     
+<span class="k">if</span> <span class="n">let</span> <span class="n">filelistDictionary</span> <span class="o">=</span> <span class="k">try</span><span class="err">?</span> <span class="n">JSONSerialization</span><span class="o">.</span><span class="n">jsonObject</span><span class="p">(</span><span class="k">with</span><span class="p">:</span> 
+ <span class="n">data</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="p">[])</span> <span class="k">as</span><span class="err">?</span> <span class="p">[</span><span class="n">String</span><span class="p">:</span> <span class="n">Any</span>   <span class="p">]</span> <span class="p">{</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">filelistDictionary</span> <span class="p">{</span>
+    <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"key=  \(key) value = \(value)"</span><span class="p">)</span>
+    <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"type \(type(of: value))"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="n">Array</span><span class="o">&lt;</span><span class="n">Any</span><span class="o">&gt;</span> <span class="p">{</span>
+                            <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"Array key = \(key)"</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">let</span> <span class="n">filelistArray</span> <span class="o">=</span> <span class="n">filelistDictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]{</span>
+                            <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"Type \(type(of: filelistArray))"</span><span class="p">)</span>
+                            <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">filelistArray</span><span class="p">)</span>
+                            <span class="n">filelistArrayDictionary</span> <span class="o">=</span> <span class="n">filelistArray</span> <span class="k">as</span><span class="o">!</span>  <span class="o">[[</span>String:String<span class="o">]]</span>
+                            <span class="o">//</span> <span class="nb">print</span><span class="p">(</span><span class="n">filelistArrayDictionary</span><span class="p">)</span>
+                             
+                           <span class="p">}</span>
+<span class="p">}</span>
+       <span class="p">}</span>
+<span class="o">//</span>
+    <span class="p">}</span> 
+    <span class="k">if</span> <span class="n">let</span> <span class="n">httpResponse</span> <span class="o">=</span> <span class="n">response</span> <span class="k">as</span><span class="err">?</span> <span class="n">HTTPURLResponse</span> <span class="p">{</span>
+       <span class="nb">print</span><span class="p">(</span><span class="n">httpResponse</span><span class="o">.</span><span class="n">statusCode</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="n">semaphorel</span><span class="o">.</span><span class="n">signal</span><span class="p">()</span>
+  <span class="p">}}</span>
+<span class="n">taskl</span><span class="o">.</span><span class="n">resume</span><span class="p">()</span>
+ <span class="n">semaphorel</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+ <span class="k">return</span> <span class="n">filelistArrayDictionary</span>
+ <span class="p">}</span>
+
+<span class="n">func</span> <span class="n">GCEFindLatestFileId</span><span class="p">(</span><span class="n">searchName</span><span class="p">:</span><span class="n">String</span><span class="p">,</span> <span class="n">FileIds</span><span class="p">:[[</span><span class="n">String</span><span class="p">:</span><span class="n">String</span><span class="p">]])</span><span class="o">-&gt;</span><span class="n">String</span>
+<span class="p">{</span>
+<span class="n">let</span> <span class="n">string</span> <span class="o">=</span> <span class="s2">"2019-01-14T00:00:00.000Z"</span>               
+<span class="n">let</span> <span class="n">utcTimezone</span> <span class="o">=</span> <span class="n">TimeZone</span><span class="p">(</span><span class="n">abbreviation</span><span class="p">:</span> <span class="s2">"UTC"</span><span class="p">)</span><span class="err">!</span>
+<span class="n">let</span> <span class="n">dfs</span> <span class="o">=</span> <span class="n">DateFormatter</span><span class="p">()</span>
+<span class="n">dfs</span><span class="o">.</span><span class="n">timeZone</span> <span class="o">=</span> <span class="n">utcTimezone</span>
+<span class="n">dfs</span><span class="o">.</span><span class="n">locale</span> <span class="o">=</span> <span class="n">Locale</span><span class="p">(</span><span class="n">identifier</span><span class="p">:</span> <span class="s2">"en_gb"</span><span class="p">)</span>
+<span class="n">dfs</span><span class="o">.</span><span class="n">dateFormat</span> <span class="o">=</span> <span class="s2">"yyyy-MM-dd'T'HH:mm:ss.SSSZ"</span>
+<span class="n">dfs</span><span class="o">.</span><span class="n">calendar</span> <span class="o">=</span> <span class="n">Calendar</span><span class="p">(</span><span class="n">identifier</span><span class="p">:</span> <span class="n">Calendar</span><span class="o">.</span><span class="n">Identifier</span><span class="o">.</span><span class="n">iso8601</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">basedate</span> <span class="o">=</span> <span class="n">dfs</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="n">from</span><span class="p">:</span> <span class="n">string</span><span class="p">)</span><span class="err">!</span>
+  <span class="n">var</span> <span class="n">datebase</span> <span class="o">=</span> <span class="n">basedate</span>
+  <span class="n">var</span> <span class="n">returnvalue</span><span class="p">:</span> <span class="n">String</span> <span class="o">=</span> <span class="s2">""</span>
+<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">FileIds</span>
+ <span class="p">{</span>
+   <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="o">==</span> <span class="n">searchName</span>
+   <span class="p">{</span>
+     <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"\(item["</span><span class="n">modifiedTime</span><span class="s2">"]!) \(item["</span><span class="nb">id</span><span class="s2">"]!)"</span><span class="p">)</span>
+     <span class="k">if</span> <span class="n">dfs</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="n">from</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="s2">"modifiedTime"</span><span class="p">]</span><span class="o">!)</span>! &gt; datebase
+     <span class="p">{</span>
+     
+       <span class="n">datebase</span> <span class="o">=</span> <span class="n">dfs</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="n">from</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="s2">"modifiedTime"</span><span class="p">]</span><span class="o">!)</span>!
+       
+     <span class="p">}</span>
+   <span class="p">}</span>
+    
+ <span class="p">}</span>
+ <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">FileIds</span>
+ <span class="p">{</span>
+   <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="o">==</span> <span class="n">searchName</span>
+   <span class="p">{</span>
+     <span class="k">if</span> <span class="n">dfs</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="n">from</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="s2">"modifiedTime"</span><span class="p">]</span><span class="o">!)</span>! <span class="o">==</span> datebase
+     <span class="p">{</span>
+       <span class="n">returnvalue</span> <span class="o">=</span> <span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span><span class="o">!)</span>
+     <span class="p">}</span>
+   <span class="p">}</span>
+ <span class="p">}</span>
+<span class="k">return</span> <span class="n">returnvalue</span>
+<span class="p">}</span>
+
+<span class="n">func</span> <span class="n">GCEPatchUpload</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="n">fileId</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="n">authCode</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="n">uploadData</span><span class="p">:</span> <span class="n">Data</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">String</span>
+<span class="p">{</span>
+
+
+
+<span class="n">let</span> <span class="n">urlu1</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="n">string</span><span class="p">:</span>
+ <span class="s2">"https://www.googleapis.com/upload/drive/v3/files/\(fileId)?uploadType=resumable"</span><span class="p">)</span>
+ <span class="n">var</span> <span class="n">request</span> <span class="o">=</span> <span class="n">URLRequest</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="n">urlu1</span><span class="o">!)</span>
+<span class="n">var</span> <span class="n">mylocation</span><span class="p">:</span><span class="n">String</span> <span class="o">=</span> <span class="s2">""</span>
+<span class="n">request</span><span class="o">.</span><span class="n">httpMethod</span> <span class="o">=</span> <span class="s2">"PATCH"</span>
+<span class="o">//</span><span class="n">let</span> <span class="n">jsonMetaData1</span> <span class="o">=</span> <span class="k">try</span><span class="err">?</span> <span class="n">JSONSerialization</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">withJSONObject</span><span class="p">:</span> <span class="n">description</span><span class="p">)</span> 
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">"application/json"</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"Content-Type"</span><span class="p">)</span> 
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">"Bearer "</span><span class="o">+</span><span class="n">authCode</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"Authorization"</span><span class="p">)</span> 
+<span class="o">/*</span>
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">"\(jsonMetaData1!.count)"</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"Content-Length"</span><span class="p">)</span>
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">"image/jpeg"</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"X-Upload-Content-Type"</span><span class="p">)</span>
+<span class="n">request</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">"\(uploadData.count)"</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span> <span class="s2">"X-Upload-Content-Length"</span><span class="p">)</span>
+<span class="n">request</span><span class="o">.</span><span class="n">httpBody</span> <span class="o">=</span> <span class="n">jsonMetaData1</span><span class="err">!</span>
+<span class="o">*/</span>
+
+<span class="o">////</span>
+<span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"\(request.httpMethod ?? "") \(String(describing:request.url))"</span><span class="p">)</span>
+       <span class="o">//</span> <span class="n">let</span> <span class="n">strup</span> <span class="o">=</span> <span class="n">String</span><span class="p">(</span><span class="n">decoding</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">httpBody</span><span class="o">!</span>, as: UTF8.self<span class="o">)</span>
+
+       <span class="o">//</span> <span class="nb">print</span><span class="p">(</span><span class="s2">"HEADERS </span><span class="se">\n</span><span class="s2"> \(String(describing:request.allHTTPHeaderFields))"</span><span class="p">)</span>
+<span class="o">//</span>                   
+<span class="n">let</span> <span class="n">semaphoreuploadput1</span> <span class="o">=</span> <span class="n">DispatchSemaphore</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">taskuploadput1</span> <span class="o">=</span> <span class="n">URLSession</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="n">dataTask</span><span class="p">(</span><span class="k">with</span><span class="p">:</span> <span class="n">request</span><span class="p">)</span> <span class="p">{</span> 
+  <span class="n">data</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">error</span> <span class="ow">in</span>
+    <span class="o">//</span> <span class="n">Do</span> <span class="n">something</span>
+      <span class="k">if</span> <span class="n">let</span> <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">,</span> <span class="n">let</span> <span class="n">dataString</span> <span class="o">=</span> <span class="n">String</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">data</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="o">.</span><span class="n">utf8</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nb">print</span><span class="p">(</span><span class="n">dataString</span><span class="p">)</span>
+      <span class="p">}</span>
+      <span class="k">if</span> <span class="n">let</span> <span class="n">httpResponse</span> <span class="o">=</span> <span class="n">response</span> <span class="k">as</span><span class="err">?</span> <span class="n">HTTPURLResponse</span> <span class="p">{</span>
+      <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">httpResponse</span><span class="o">.</span><span class="n">statusCode</span><span class="p">)</span>
+      
+<span class="o">/*</span><span class="k">for</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span> <span class="ow">in</span> <span class="n">httpResponse</span><span class="o">.</span><span class="n">allHeaderFields</span> <span class="p">{</span> 
+                                           <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+                                          <span class="p">}</span>
+                                          <span class="o">*/</span>
+      <span class="k">if</span> <span class="n">let</span> <span class="n">location</span> <span class="o">=</span> <span class="n">httpResponse</span><span class="o">.</span><span class="n">allHeaderFields</span><span class="p">[</span><span class="s2">"Location"</span><span class="p">]</span> <span class="k">as</span><span class="err">?</span> <span class="n">String</span>
+          <span class="p">{</span><span class="n">mylocation</span> <span class="o">=</span> <span class="n">location</span><span class="p">}</span> 
+      <span class="p">}</span>
+    <span class="n">semaphoreuploadput1</span><span class="o">.</span><span class="n">signal</span><span class="p">()</span>
+<span class="p">}</span><span class="o">//</span><span class="n">url</span>
+   <span class="n">taskuploadput1</span><span class="o">.</span><span class="n">resume</span><span class="p">()</span>
+   <span class="n">semaphoreuploadput1</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+   <span class="k">return</span> <span class="n">mylocation</span>
+<span class="p">}</span>
+
+
+
+
+
+<span class="n">func</span> <span class="n">GCECreateLocalDirectories</span><span class="p">(</span><span class="n">fullname</span><span class="p">:</span> <span class="n">String</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">String</span>
+<span class="p">{</span>
+<span class="n">let</span> <span class="n">path</span> <span class="o">=</span> <span class="n">FileManager</span><span class="o">.</span><span class="n">default</span><span class="o">.</span><span class="n">currentDirectoryPath</span>
+<span class="n">let</span> <span class="n">GCEPath</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">appendingPathComponent</span><span class="p">(</span><span class="n">fullname</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">URLGCEPath</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="n">fileURLWithPath</span><span class="p">:</span> <span class="n">GCEPath</span><span class="p">)</span> 
+<span class="k">if</span> <span class="o">!</span>FileManager.default.fileExists<span class="o">(</span>atPath: URLGCEPath.path<span class="o">)</span> <span class="o">{</span>
+    <span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"Creating"</span><span class="p">)</span>
+    <span class="n">do</span> <span class="p">{</span>
+        <span class="k">try</span> <span class="n">FileManager</span><span class="o">.</span><span class="n">default</span><span class="o">.</span><span class="n">createDirectory</span><span class="p">(</span><span class="n">atPath</span><span class="p">:</span> <span class="n">URLGCEPath</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">withIntermediateDirectories</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span> <span class="n">attributes</span><span class="p">:</span> <span class="p">[:])</span>
+    <span class="p">}</span> <span class="n">catch</span> <span class="p">{</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="o">.</span><span class="n">localizedDescription</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="k">return</span> <span class="s2">"TRUE"</span>
+<span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">func</span> <span class="n">GCEPreExport</span><span class="p">(</span><span class="n">myjson</span><span class="p">:[</span><span class="n">String</span><span class="p">:</span><span class="n">String</span><span class="p">])</span><span class="o">-&gt;</span><span class="n">String</span>
+<span class="p">{</span>
+
+<span class="n">let</span> <span class="n">AT</span><span class="o">=</span><span class="n">GCEGAT</span><span class="p">(</span><span class="n">myjson</span><span class="p">:</span> <span class="n">myjson</span><span class="p">)</span>
+
+<span class="o">//</span> <span class="n">Get</span> <span class="n">NB</span> <span class="n">name</span> <span class="ow">and</span> <span class="n">file</span> <span class="ow">and</span> <span class="n">copy</span> <span class="kn">from</span> <span class="nn">G</span><span class="o">-</span><span class="n">Drive</span> <span class="n">to</span> <span class="n">local</span> <span class="n">drive</span> 
+
+<span class="n">var</span> <span class="p">(</span><span class="n">NBn</span><span class="p">,</span><span class="n">NBf</span><span class="p">)</span><span class="o">=</span><span class="n">GCEGetNotebookName</span><span class="p">()</span>
+
+<span class="n">var</span> <span class="n">FI</span> <span class="o">=</span> <span class="n">NBf</span><span class="o">.</span><span class="n">components</span><span class="p">(</span><span class="n">separatedBy</span><span class="p">:</span> <span class="s2">"="</span><span class="p">)</span>
+<span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">FI</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">var</span> <span class="n">dd</span> <span class="o">=</span> <span class="n">GCEGetFile</span><span class="p">(</span><span class="n">fileid</span><span class="p">:</span> <span class="n">FI</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>  <span class="n">authorizationToken</span><span class="p">:</span> <span class="n">AT</span><span class="p">)</span>
+<span class="n">GCEWriteFileLocal</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="n">NBn</span> <span class="p">,</span> <span class="n">dd</span><span class="p">:</span> <span class="n">dd</span><span class="p">)</span>
+<span class="k">return</span> <span class="n">NBn</span>
+<span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="s2">"/bin/ls"</span><span class="o">.</span><span class="n">shell</span><span class="p">(</span><span class="s2">"-lh"</span><span class="p">,</span><span class="s2">"/content"</span><span class="p">))</span>
+<span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">func</span> <span class="n">GCEPostExport</span><span class="p">(</span><span class="n">myjson</span><span class="p">:[</span><span class="n">String</span><span class="p">:</span><span class="n">String</span><span class="p">])</span><span class="o">-&gt;</span><span class="n">String</span>
+<span class="p">{</span>
+<span class="n">let</span> <span class="n">AT</span><span class="o">=</span><span class="n">GCEGAT</span><span class="p">(</span><span class="n">myjson</span><span class="p">:</span> <span class="n">myjson</span><span class="p">)</span>
+<span class="n">let</span> <span class="p">(</span><span class="n">NBn</span><span class="p">,</span><span class="n">_</span><span class="p">)</span><span class="o">=</span><span class="n">GCEGetNotebookName</span><span class="p">()</span>
+
+<span class="o">//</span> <span class="n">Check</span> <span class="k">for</span> <span class="n">pre</span><span class="o">-</span><span class="n">existing</span> <span class="n">folder</span>
+<span class="n">let</span> <span class="n">exportFolder</span> <span class="o">=</span> <span class="p">((</span><span class="s2">"FastaiNotebook_"</span><span class="o">+</span><span class="n">NBn</span><span class="p">)</span><span class="o">.</span><span class="n">components</span><span class="p">(</span><span class="n">separatedBy</span><span class="p">:</span> <span class="s2">"."</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+<span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">exportFolder</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">xrd</span> <span class="o">=</span>  <span class="n">GCEReadDirectory</span><span class="p">(</span><span class="n">authorizationToken</span><span class="p">:</span> <span class="n">AT</span><span class="p">,</span> <span class="n">searchName</span><span class="p">:</span> <span class="n">exportFolder</span> <span class="p">)</span>
+<span class="n">let</span> <span class="n">notebookId</span> <span class="o">=</span> <span class="n">GCEFindLatestFileId</span><span class="p">(</span><span class="n">searchName</span><span class="p">:</span><span class="n">exportFolder</span><span class="p">,</span> <span class="n">FileIds</span><span class="p">:</span> <span class="n">xrd</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">notebookId</span> <span class="o">==</span> <span class="s2">""</span><span class="p">)</span> <span class="p">{</span><span class="nb">print</span><span class="p">(</span><span class="s2">"Creating Folder"</span><span class="p">)}</span>
+<span class="o">//</span><span class="n">Does</span> <span class="ow">not</span> <span class="n">exist</span> <span class="n">so</span> <span class="n">create</span> <span class="n">one</span><span class="o">.</span> <span class="n">First</span> <span class="n">find</span> <span class="n">the</span> <span class="n">file</span> <span class="nb">id</span> <span class="n">of</span> <span class="n">colab</span> <span class="n">Notebooks</span>
+
+<span class="n">let</span> <span class="n">xrdcl</span> <span class="o">=</span>  <span class="n">GCEReadDirectory</span><span class="p">(</span><span class="n">authorizationToken</span><span class="p">:</span> <span class="n">AT</span><span class="p">,</span> <span class="n">searchName</span><span class="p">:</span> <span class="s2">"Colab Notebooks"</span> <span class="p">)</span>
+<span class="n">let</span> <span class="n">ParentCLId</span> <span class="o">=</span> <span class="n">GCEFindLatestFileId</span><span class="p">(</span><span class="n">searchName</span><span class="p">:</span><span class="s2">"Colab Notebooks"</span><span class="p">,</span> <span class="n">FileIds</span><span class="p">:</span> <span class="n">xrdcl</span><span class="p">)</span>
+<span class="o">//</span> <span class="n">And</span> <span class="n">create</span> <span class="n">one</span> <span class="n">noting</span> <span class="n">the</span> <span class="n">File</span> <span class="nb">id</span>
+<span class="n">let</span> <span class="n">latestFolder</span>  <span class="o">=</span> <span class="n">GCECreateFolder</span><span class="p">(</span><span class="n">parentfolderid</span><span class="p">:</span> <span class="n">ParentCLId</span><span class="p">,</span> <span class="n">NotebookName</span><span class="p">:</span> <span class="n">exportFolder</span><span class="p">,</span> <span class="n">authorizationToken</span><span class="p">:</span> <span class="n">AT</span><span class="p">)</span>
+
+<span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">xrdcl</span><span class="p">)</span>
+
+<span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">ParentCLId</span><span class="p">)</span>
+
+<span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">exportFolder</span><span class="p">)</span>
+
+<span class="o">//</span> <span class="n">Find</span> <span class="n">the</span> <span class="n">local</span> <span class="n">files</span> <span class="n">generated</span> <span class="n">by</span> <span class="n">export</span>
+
+<span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">exportFolder</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">Package</span> <span class="o">=</span> <span class="n">GCELocalFileRead</span><span class="p">(</span><span class="n">atPath</span><span class="p">:</span> <span class="n">exportFolder</span><span class="o">+</span><span class="s2">"/Package.swift"</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">main</span> <span class="o">=</span>    <span class="n">GCELocalFileRead</span><span class="p">(</span><span class="n">atPath</span><span class="p">:</span> <span class="n">exportFolder</span><span class="o">+</span><span class="s2">"/Sources/"</span><span class="o">+</span><span class="n">exportFolder</span><span class="o">+</span><span class="s2">"/"</span><span class="o">+</span><span class="n">exportFolder</span><span class="o">.</span><span class="n">components</span><span class="p">(</span><span class="n">separatedBy</span><span class="p">:</span> <span class="s2">"_"</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="s2">".swift"</span><span class="p">)</span>
+
+
+<span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">latestFolder</span><span class="p">)</span>
+
+<span class="o">//</span> <span class="n">And</span> <span class="n">copy</span> <span class="n">to</span> <span class="n">G</span>
+<span class="n">let</span> <span class="n">GCEPuLP</span> <span class="o">=</span>  <span class="n">GCEPostUpload</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="s2">"Package.swift"</span><span class="p">,</span> <span class="n">folderid</span><span class="p">:</span> <span class="n">latestFolder</span><span class="p">,</span> <span class="n">authCode</span><span class="p">:</span> <span class="n">AT</span><span class="p">,</span> <span class="n">uploadData</span><span class="p">:</span> <span class="n">Package</span><span class="p">)</span>
+<span class="n">GCEPut</span><span class="p">(</span><span class="n">location</span><span class="p">:</span> <span class="n">GCEPuLP</span><span class="p">,</span> <span class="n">newdd</span><span class="p">:</span> <span class="n">Package</span><span class="p">)</span>
+<span class="o">//</span><span class="n">And</span> <span class="n">find</span> <span class="n">their</span> <span class="n">file</span> <span class="nb">id</span>
+<span class="n">let</span> <span class="n">GCERDFF</span> <span class="o">=</span> <span class="n">GCEReadDirectoryforFiles</span><span class="p">(</span><span class="n">authorizationToken</span><span class="p">:</span> <span class="n">AT</span><span class="p">,</span> <span class="n">searchName</span><span class="p">:</span> <span class="s2">"Package.swift"</span><span class="p">,</span><span class="n">folder</span><span class="p">:</span> <span class="n">latestFolder</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">GPackageId</span> <span class="o">=</span> <span class="n">GCEFindLatestFileId</span><span class="p">(</span><span class="n">searchName</span><span class="p">:</span><span class="s2">"Package.swift"</span><span class="p">,</span> <span class="n">FileIds</span><span class="p">:</span> <span class="n">GCERDFF</span><span class="p">)</span>
+
+
+<span class="o">//</span> <span class="ow">and</span> <span class="n">again</span>
+
+
+
+<span class="n">let</span> <span class="n">GCEPuLm</span> <span class="o">=</span> <span class="n">GCEPostUpload</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="s2">"main.swift"</span><span class="p">,</span> <span class="n">folderid</span><span class="p">:</span> <span class="n">latestFolder</span><span class="p">,</span> <span class="n">authCode</span><span class="p">:</span> <span class="n">AT</span><span class="p">,</span> <span class="n">uploadData</span><span class="p">:</span> <span class="n">main</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">GCEputr</span> <span class="o">=</span> <span class="n">GCEPut</span><span class="p">(</span><span class="n">location</span><span class="p">:</span> <span class="n">GCEPuLm</span><span class="p">,</span> <span class="n">newdd</span><span class="p">:</span> <span class="n">main</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">GCERDFFmain</span> <span class="o">=</span> <span class="n">GCEReadDirectoryforFiles</span><span class="p">(</span><span class="n">authorizationToken</span><span class="p">:</span> <span class="n">AT</span><span class="p">,</span> <span class="n">searchName</span><span class="p">:</span> <span class="s2">"main.swift"</span><span class="p">,</span><span class="n">folder</span><span class="p">:</span> <span class="n">latestFolder</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">GmainId</span> <span class="o">=</span> <span class="n">GCEFindLatestFileId</span><span class="p">(</span><span class="n">searchName</span><span class="p">:</span><span class="s2">"main.swift"</span><span class="p">,</span> <span class="n">FileIds</span><span class="p">:</span> <span class="n">GCERDFFmain</span><span class="p">)</span>
+
+<span class="o">//</span> <span class="n">They</span> <span class="n">may</span> <span class="n">exist</span> 
+<span class="n">let</span> <span class="n">RDP</span> <span class="o">=</span> <span class="n">GCEReadDirectoryforFiles</span><span class="p">(</span><span class="n">authorizationToken</span><span class="p">:</span> <span class="n">AT</span><span class="p">,</span> <span class="n">searchName</span><span class="p">:</span> <span class="s2">"Package.swift"</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">latestFolder</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">GPId</span> <span class="o">=</span> <span class="n">GCEFindLatestFileId</span><span class="p">(</span><span class="n">searchName</span><span class="p">:</span><span class="s2">"Package.swift"</span><span class="p">,</span> <span class="n">FileIds</span><span class="p">:</span> <span class="n">RDP</span><span class="p">)</span>
+
+
+<span class="n">let</span> <span class="n">myPackagePatchLocation</span>  <span class="o">=</span> <span class="n">GCEPatchUpload</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="s2">"Package.swift"</span><span class="p">,</span> <span class="n">fileId</span><span class="p">:</span> <span class="n">GPackageId</span><span class="p">,</span> <span class="n">authCode</span><span class="p">:</span> <span class="n">AT</span><span class="p">,</span> <span class="n">uploadData</span><span class="p">:</span> <span class="n">Package</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">GCEpackager</span> <span class="o">=</span> <span class="n">GCEPut</span><span class="p">(</span><span class="n">location</span><span class="p">:</span>  <span class="n">myPackagePatchLocation</span><span class="p">,</span> <span class="n">newdd</span><span class="p">:</span> <span class="n">Package</span><span class="p">)</span>
+
+<span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">GmainId</span><span class="p">,</span><span class="n">xxx</span><span class="p">)</span>
+
+<span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">GCEputr</span><span class="p">)</span>
+<span class="n">String</span><span class="p">(</span><span class="n">data</span><span class="p">:</span><span class="n">GCEputr</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="o">.</span><span class="n">utf8</span><span class="p">)</span>
+<span class="n">let</span> <span class="n">xxx</span> <span class="o">=</span> <span class="k">try</span><span class="err">?</span><span class="p">(</span><span class="n">JSONSerialization</span><span class="o">.</span><span class="n">jsonObject</span><span class="p">(</span><span class="k">with</span><span class="p">:</span> 
+               <span class="n">GCEputr</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="p">[])</span> <span class="k">as</span><span class="err">?</span> <span class="p">[</span><span class="n">String</span><span class="p">:</span> <span class="n">String</span>  <span class="p">]</span> <span class="p">)</span><span class="o">![</span><span class="s2">"id"</span><span class="o">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">GmainId</span><span class="p">,</span><span class="n">GPId</span><span class="p">,</span><span class="n">xxx</span><span class="o">!</span>,GCEpackager<span class="o">)</span>
+<span class="n">String</span><span class="p">(</span><span class="n">data</span><span class="p">:</span><span class="n">GCEputr</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="o">.</span><span class="n">utf8</span><span class="p">)</span>
+<span class="k">return</span> <span class="n">NBn</span>
+<span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">let</span> <span class="n">myjson</span><span class="o">=</span><span class="p">[</span>
+ <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"service_account"</span><span class="p">,</span>
+  <span class="s2">"project_id"</span><span class="p">:</span> <span class="s2">"swift3-257813"</span><span class="p">,</span>
+  <span class="s2">"private_key_id"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+  <span class="s2">"private_key"</span><span class="p">:</span> <span class="s2">"-----BEGIN PRIVATE KEY----------END PRIVATE KEY-----</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>
+  <span class="s2">"client_email"</span><span class="p">:</span> <span class="s2">"gdswift@swift3-257813.iam.gserviceaccount.com"</span><span class="p">,</span>
+  <span class="s2">"client_id"</span><span class="p">:</span> <span class="s2">"113832870044608195990"</span><span class="p">,</span>
+  <span class="s2">"auth_uri"</span><span class="p">:</span> <span class="s2">"https://accounts.google.com/o/oauth2/auth"</span><span class="p">,</span>
+  <span class="s2">"token_uri"</span><span class="p">:</span> <span class="s2">"https://oauth2.googleapis.com/token"</span><span class="p">,</span>
+  <span class="s2">"auth_provider_x509_cert_url"</span><span class="p">:</span> <span class="s2">"https://www.googleapis.com/oauth2/v1/certs"</span><span class="p">,</span>
+  <span class="s2">"client_x509_cert_url"</span><span class="p">:</span> <span class="s2">"https://www.googleapis.com/robot/v1/metadata/x509/gdswift</span><span class="si">%40s</span><span class="s2">wift3-257813.iam.gserviceaccount.com"</span>
+
+<span class="p">]</span> <span class="k">as</span> <span class="p">[</span><span class="n">String</span><span class="p">:</span><span class="n">String</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="o">//</span> <span class="n">export</span>
+<span class="kn">import</span> <span class="nn">Path</span>
+<span class="n">public</span> <span class="n">func</span> <span class="n">dummytest</span><span class="p">(</span><span class="n">NBn</span><span class="p">:</span><span class="n">String</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">String</span><span class="p">{</span>
+
+<span class="n">var</span> <span class="n">path</span><span class="o">=</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span>
+<span class="o">//</span><span class="nb">print</span><span class="p">(</span><span class="n">NBn</span><span class="p">)</span>
+<span class="k">return</span> <span class="n">NBn</span>
+<span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">let</span> <span class="n">NBn</span> <span class="o">=</span> <span class="n">GCEPreExport</span><span class="p">(</span><span class="n">myjson</span><span class="p">:</span><span class="n">myjson</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>200
+200
+200
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">let</span> <span class="n">exporter</span> <span class="o">=</span> <span class="n">NotebookExport</span><span class="p">(</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="o">/</span><span class="n">NBn</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">exporter</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">usingPrefix</span><span class="p">:</span> <span class="s2">"FastaiNotebook_"</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"/bin/ls"</span><span class="o">.</span><span class="n">shell</span><span class="p">(</span><span class="s2">"-lh"</span><span class="p">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>success
+total 48K
+-rw------- 1 root root  39K Jul 19 18:51 ExportTest.ipynb
+drwxr-xr-x 3 root root 4.0K Jul 19 18:29 FastaiNotebook_ExportTest
+drwxr-xr-x 1 root root 4.0K Jul 10 16:29 sample_data
+
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">GCEPostExport</span><span class="p">(</span><span class="n">myjson</span><span class="p">:</span><span class="n">myjson</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>200
+200
+200
+200
+200
+200
+200
+200
+200
+200
+200
+200
+200
+200
+
+200
+15u9TaigNaPYUZnFpw1Zfcw3dvoeMs56g 1ZVd1DFnDaCZDeFrGfCQWsNvkdOshhq_C 15u9TaigNaPYUZnFpw1Zfcw3dvoeMs56g 123 bytes
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>"ExportTest.ipynb"
+</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+</div>
+
+
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="Conwyn/MyBlogs"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/MyBlogs/fastai/swift/googleapi/2021/05/22/SwiftExportImport.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/MyBlogs/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/MyBlogs/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/MyBlogs/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>An easy to use blogging platform with support for Jupyter Notebooks.</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/fastai" title="fastai"><svg class="svg-icon grey"><use xlink:href="/MyBlogs/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/fastdotai" title="fastdotai"><svg class="svg-icon grey"><use xlink:href="/MyBlogs/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
