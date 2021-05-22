@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Playing with CKKS | fastpages</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Playing with CKKS" />
+<meta name="author" content="Conwyn" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Based on https://blog.openmined.org/ckks-explained-part-3-encryption-and-decryption/" />
+<meta property="og:description" content="Based on https://blog.openmined.org/ckks-explained-part-3-encryption-and-decryption/" />
+<link rel="canonical" href="https://conwyn.github.io/MyBlogs/fastai/fhe/ckks/2021/05/22/CKKS.html" />
+<meta property="og:url" content="https://conwyn.github.io/MyBlogs/fastai/fhe/ckks/2021/05/22/CKKS.html" />
+<meta property="og:site_name" content="fastpages" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-05-22T00:00:00-05:00" />
+<script type="application/ld+json">
+{"description":"Based on https://blog.openmined.org/ckks-explained-part-3-encryption-and-decryption/","url":"https://conwyn.github.io/MyBlogs/fastai/fhe/ckks/2021/05/22/CKKS.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://conwyn.github.io/MyBlogs/fastai/fhe/ckks/2021/05/22/CKKS.html"},"headline":"Playing with CKKS","dateModified":"2021-05-22T00:00:00-05:00","datePublished":"2021-05-22T00:00:00-05:00","author":{"@type":"Person","name":"Conwyn"},"@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/MyBlogs/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://conwyn.github.io/MyBlogs/feed.xml" title="fastpages" /><link rel="shortcut icon" type="image/x-icon" href="/MyBlogs/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/MyBlogs/">fastpages</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/MyBlogs/about/">About Me</a><a class="page-link" href="/MyBlogs/search/">Search</a><a class="page-link" href="/MyBlogs/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Playing with CKKS</h1><p class="page-description">Based on https://blog.openmined.org/ckks-explained-part-3-encryption-and-decryption/</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-05-22T00:00:00-05:00" itemprop="datePublished">
+        May 22, 2021
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Conwyn</span></span>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      10 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/MyBlogs/categories/#fastai">fastai</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/MyBlogs/categories/#FHE">FHE</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/MyBlogs/categories/#CKKS">CKKS</a>
+        
+      
+      </p>
+    
+
+    
+      
+        <div class="pb-5 d-flex flex-wrap flex-justify-end">
+          <div class="px-2">
+
+    <a href="https://github.com/Conwyn/MyBlogs/tree/master/_notebooks/2021-05-22-CKKS.ipynb" role="button" target="_blank">
+<img class="notebook-badge-image" src="/MyBlogs/assets/badges/github.svg" alt="View On GitHub">
+    </a>
+</div>
+
+          <div class="px-2">
+    <a href="https://mybinder.org/v2/gh/Conwyn/MyBlogs/master?filepath=_notebooks%2F2021-05-22-CKKS.ipynb" target="_blank">
+        <img class="notebook-badge-image" src="/MyBlogs/assets/badges/binder.svg" alt="Open In Binder"/>
+    </a>
+</div>
+
+          <div class="px-2">
+    <a href="https://colab.research.google.com/github/Conwyn/MyBlogs/blob/master/_notebooks/2021-05-22-CKKS.ipynb" target="_blank">
+        <img class="notebook-badge-image" src="/MyBlogs/assets/badges/colab.svg" alt="Open In Colab"/>
+    </a>
+</div>
+        </div>
+      </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+</ul><!--
+#################################################
+### THIS FILE WAS AUTOGENERATED! DO NOT EDIT! ###
+#################################################
+# file to edit: _notebooks/2021-05-22-CKKS.ipynb
+-->
+
+<div class="container" id="notebook-container">
+        
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>CKSS is a method of taking Complex (so Real) numbers and generating polynomials and then encrypting those polynomials. It is possible to add and multiply these encrypted polynomials and then decrypt them giving the answers as if the same operation applied to the original polynomials and the actual initial Real numbers. So ideal for deep learning matrix multipliction.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">numpy.polynomial</span> <span class="kn">import</span> <span class="n">Polynomial</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="k">def</span> <span class="nf">round_coordinates</span><span class="p">(</span><span class="n">coordinates</span><span class="p">):</span>
+    <span class="sd">"""Gives the integral rest."""</span>
+    <span class="n">coordinates</span> <span class="o">=</span> <span class="n">coordinates</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">coordinates</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">coordinates</span>
+
+<span class="k">def</span> <span class="nf">coordinate_wise_random_rounding</span><span class="p">(</span><span class="n">coordinates</span><span class="p">):</span>
+    <span class="sd">"""Rounds coordinates randonmly."""</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">round_coordinates</span><span class="p">(</span><span class="n">coordinates</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="n">c</span><span class="p">,</span> <span class="n">c</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="o">-</span><span class="n">c</span><span class="p">,</span> <span class="n">c</span><span class="p">])</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">r</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="n">rounded_coordinates</span> <span class="o">=</span> <span class="n">coordinates</span> <span class="o">-</span> <span class="n">f</span>
+    <span class="n">rounded_coordinates</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span> <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">rounded_coordinates</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">rounded_coordinates</span>
+
+<span class="k">class</span> <span class="nc">CKKSEncoder</span><span class="p">:</span>
+    <span class="sd">"""Basic CKKS encoder to encode complex vectors into polynomials."""</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">M</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span><span class="nb">float</span><span class="p">):</span>
+        <span class="sd">"""Initializes with scale."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="mi">1</span><span class="n">j</span> <span class="o">/</span> <span class="n">M</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="n">M</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_sigma_R_basis</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">scale</span>
+        
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">vandermonde</span><span class="p">(</span><span class="n">xi</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">M</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+        <span class="sd">"""Computes the Vandermonde matrix from a m-th root of unity."""</span>
+        
+        <span class="n">N</span> <span class="o">=</span> <span class="n">M</span> <span class="o">//</span><span class="mi">2</span>
+        <span class="n">matrix</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># We will generate each row of the matrix</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="c1"># For each row we select a different root</span>
+            <span class="n">root</span> <span class="o">=</span> <span class="n">xi</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="c1"># Then we store its powers</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+                <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">root</span> <span class="o">**</span> <span class="n">j</span><span class="p">)</span>
+            <span class="n">matrix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">matrix</span>
+    
+    <span class="k">def</span> <span class="nf">sigma_inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Polynomial</span><span class="p">:</span>
+        <span class="sd">"""Encodes the vector b in a polynomial using an M-th root of unity."""</span>
+
+        <span class="c1"># First we create the Vandermonde matrix</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">CKKSEncoder</span><span class="o">.</span><span class="n">vandermonde</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xi</span><span class="p">,</span> <span class="n">M</span><span class="p">)</span>
+
+        <span class="c1"># Then we solve the system</span>
+        <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+        <span class="c1"># Finally we output the polynomial</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Polynomial</span><span class="p">(</span><span class="n">coeffs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">p</span>
+
+    <span class="k">def</span> <span class="nf">sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">:</span> <span class="n">Polynomial</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+        <span class="sd">"""Decodes a polynomial by applying it to the M-th roots of unity."""</span>
+
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span> <span class="o">//</span><span class="mi">2</span>
+
+        <span class="c1"># We simply apply the polynomial on the roots</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xi</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">p</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+            <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+    
+
+    <span class="k">def</span> <span class="nf">pi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+        <span class="sd">"""Projects a vector of H into C^{N/2}."""</span>
+
+        <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span> <span class="o">//</span> <span class="mi">4</span>
+        <span class="k">return</span> <span class="n">z</span><span class="p">[:</span><span class="n">N</span><span class="p">]</span>
+
+
+    <span class="k">def</span> <span class="nf">pi_inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+        <span class="sd">"""Expands a vector of C^{N/2} by expanding it with its</span>
+<span class="sd">        complex conjugate."""</span>
+
+        <span class="n">z_conjugate</span> <span class="o">=</span> <span class="n">z</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">z_conjugate</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">z_conjugate</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">z</span><span class="p">,</span> <span class="n">z_conjugate</span><span class="p">])</span>
+    
+    <span class="k">def</span> <span class="nf">create_sigma_R_basis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">"""Creates the basis (sigma(1), sigma(X), ..., sigma(X** N-1))."""</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma_R_basis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vandermonde</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+    
+
+    <span class="k">def</span> <span class="nf">compute_basis_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="sd">"""Computes the coordinates of a vector with respect to the orthogonal lattice basis."""</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="n">b</span><span class="p">))</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_R_basis</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">output</span>
+
+    <span class="k">def</span> <span class="nf">sigma_R_discretization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="sd">"""Projects a vector on the lattice using coordinate wise random rounding."""</span>
+        <span class="n">coordinates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_basis_coordinates</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+
+        <span class="n">rounded_coordinates</span> <span class="o">=</span> <span class="n">coordinate_wise_random_rounding</span><span class="p">(</span><span class="n">coordinates</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma_R_basis</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">rounded_coordinates</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">y</span>
+
+
+    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Polynomial</span><span class="p">:</span>
+        <span class="sd">"""Encodes a vector by expanding it first to H,</span>
+<span class="sd">        scale it, project it on the lattice of sigma(R), and performs</span>
+<span class="sd">        sigma inverse.</span>
+<span class="sd">        """</span>
+        <span class="n">pi_z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pi_inverse</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+        <span class="n">scaled_pi_z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">*</span> <span class="n">pi_z</span>
+        <span class="n">rounded_scale_pi_zi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_R_discretization</span><span class="p">(</span><span class="n">scaled_pi_z</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_inverse</span><span class="p">(</span><span class="n">rounded_scale_pi_zi</span><span class="p">)</span>
+
+        <span class="c1"># We round it afterwards due to numerical imprecision</span>
+        <span class="n">coef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">coef</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Polynomial</span><span class="p">(</span><span class="n">coef</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">p</span>
+
+
+    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">:</span> <span class="n">Polynomial</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+        <span class="sd">"""Decodes a polynomial by removing the scale, </span>
+<span class="sd">        evaluating on the roots, and project it on C^(N/2)"""</span>
+        <span class="n">rescaled_p</span> <span class="o">=</span> <span class="n">p</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">(</span><span class="n">rescaled_p</span><span class="p">)</span>
+        <span class="n">pi_z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pi</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pi_z</span>
+
+
+
+<span class="n">M</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">N</span> <span class="o">=</span> <span class="n">M</span> <span class="o">//</span><span class="mi">2</span>
+<span class="n">scale</span> <span class="o">=</span> <span class="mi">64</span>
+
+<span class="c1"># We set xi, which will be used in our computations</span>
+<span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="mi">1</span><span class="n">j</span> <span class="o">/</span> <span class="n">M</span><span class="p">)</span>
+<span class="n">xi</span>
+<span class="n">encoder</span> <span class="o">=</span> <span class="n">CKKSEncoder</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="n">scale</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">M</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">N</span> <span class="o">=</span> <span class="n">M</span> <span class="o">//</span><span class="mi">2</span>
+
+<span class="c1"># We set xi, which will be used in our computations</span>
+<span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="mi">1</span><span class="n">j</span> <span class="o">/</span> <span class="n">M</span><span class="p">)</span>
+<span class="n">xi</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(0.7071067811865476+0.7071067811865475j)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+<span class="n">b</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">sigma_inverse</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="n">p</span>
+
+<span class="n">b_reconstructed</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">sigma</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<span class="n">b_reconstructed</span>
+
+
+
+<span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">b_reconstructed</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>6.944442800358888e-16</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">3</span> <span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">,</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span><span class="p">])</span>
+<span class="n">z</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+
+
+<span class="n">encoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>poly([160.  90. 160.  45.])
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([2.99718446+3.99155337j, 2.00281554-1.00844663j])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">z</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+
+
+<span class="n">encoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>poly([ 32.  22.   0. -23.])
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([0.99718446-0.01104854j, 0.00281554-0.01104854j])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">z</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+
+
+<span class="n">encoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>poly([ 64.  46.   0. -46.])
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([ 2.016466+0.0000000e+00j, -0.016466+4.4408921e-16j])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">z</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+
+
+<span class="n">encoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>poly([ 96.  68.   0. -67.])
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([2.99155337+0.01104854j, 0.00844663+0.01104854j])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">z</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+
+
+<span class="n">encoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>poly([128.  90.   0. -91.])
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([3.99978637e+00-0.01104854j, 2.13634457e-04-0.01104854j])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">z</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+
+
+<span class="n">encoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>poly([ 160.  113.    0. -113.])
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([4.99697082e+00-4.44089210e-16j, 3.02917894e-03+1.33226763e-15j])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">z</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+
+
+<span class="n">encoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>poly([ 32.  23.   0. -23.])
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([ 1.008233+0.00000000e+00j, -0.008233+2.22044605e-16j])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">a1</span><span class="o">=</span><span class="n">Polynomial</span><span class="p">([</span><span class="mi">32</span><span class="p">,</span><span class="mi">22</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">23</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">a1</span><span class="p">)</span>
+<span class="n">a2</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">a1</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">a2</span><span class="p">)</span>
+<span class="n">encoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">a2</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>poly([ 32.  22.   0. -23.])
+poly([ 64.  44.   0. -46.])
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([1.99436891-0.02209709j, 0.00563109-0.02209709j])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy.polynomial</span> <span class="kn">import</span> <span class="n">polynomial</span> <span class="k">as</span> <span class="n">poly</span>
+
+<span class="k">def</span> <span class="nf">polymul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">modulus</span><span class="p">,</span> <span class="n">poly_mod</span><span class="p">):</span>
+   
+     <span class="sd">"""Multiply two polynoms</span>
+<span class="sd">    Args:</span>
+<span class="sd">        x, y: two polynoms to be multiplied.</span>
+<span class="sd">        modulus: coefficient modulus.</span>
+<span class="sd">        poly_mod: polynomial modulus.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        A polynomial in Z_modulus[X]/(poly_mod).</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">poly</span><span class="o">.</span><span class="n">polydiv</span><span class="p">(</span><span class="n">poly</span><span class="o">.</span><span class="n">polymul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">%</span> <span class="n">modulus</span><span class="p">,</span> <span class="n">poly_mod</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="n">modulus</span><span class="p">)</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">polyadd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">modulus</span><span class="p">,</span> <span class="n">poly_mod</span><span class="p">):</span>
+    <span class="sd">"""Add two polynoms</span>
+<span class="sd">    Args:</span>
+<span class="sd">        x, y: two polynoms to be added.</span>
+<span class="sd">        modulus: coefficient modulus.</span>
+<span class="sd">        poly_mod: polynomial modulus.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        A polynomial in Z_modulus[X]/(poly_mod).</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">poly</span><span class="o">.</span><span class="n">polydiv</span><span class="p">(</span><span class="n">poly</span><span class="o">.</span><span class="n">polyadd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">%</span> <span class="n">modulus</span><span class="p">,</span> <span class="n">poly_mod</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="n">modulus</span><span class="p">)</span>
+    <span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">gen_binary_poly</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+    <span class="sd">"""Generates a polynomial with coeffecients in [0, 1]</span>
+<span class="sd">    Args:</span>
+<span class="sd">        size: number of coeffcients, size-1 being the degree of the</span>
+<span class="sd">            polynomial.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        array of coefficients with the coeff[i] being </span>
+<span class="sd">        the coeff of x ^ i.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">gen_uniform_poly</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">modulus</span><span class="p">):</span>
+    <span class="sd">"""Generates a polynomial with coeffecients being integers in Z_modulus</span>
+<span class="sd">    Args:</span>
+<span class="sd">        size: number of coeffcients, size-1 being the degree of the</span>
+<span class="sd">            polynomial.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        array of coefficients with the coeff[i] being </span>
+<span class="sd">        the coeff of x ^ i.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">modulus</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">gen_normal_poly</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+    <span class="sd">"""Generates a polynomial with coeffecients in a normal distribution</span>
+<span class="sd">    of mean 0 and a standard deviation of 2, then discretize it.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        size: number of coeffcients, size-1 being the degree of the</span>
+<span class="sd">            polynomial.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        array of coefficients with the coeff[i] being </span>
+<span class="sd">        the coeff of x ^ i.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">keygen</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">modulus</span><span class="p">,</span> <span class="n">poly_mod</span><span class="p">):</span>
+    <span class="sd">"""Generate a public and secret keys</span>
+<span class="sd">    Args:</span>
+<span class="sd">        size: size of the polynoms for the public and secret keys.</span>
+<span class="sd">        modulus: coefficient modulus.</span>
+<span class="sd">        poly_mod: polynomial modulus.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Public and secret key.</span>
+<span class="sd">    </span>
+<span class="sd">    sk = gen_binary_poly(size)</span>
+<span class="sd">    a = gen_uniform_poly(size, modulus)</span>
+<span class="sd">    e = gen_normal_poly(size)</span>
+<span class="sd">    """</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">polyadd</span><span class="p">(</span><span class="n">polymul</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="p">,</span> <span class="n">sk</span><span class="p">,</span> <span class="n">modulus</span><span class="p">,</span> <span class="n">poly_mod</span><span class="p">),</span> <span class="o">-</span><span class="n">e</span><span class="p">,</span> <span class="n">modulus</span><span class="p">,</span> <span class="n">poly_mod</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">),</span> <span class="n">sk</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">encrypt</span><span class="p">(</span><span class="n">pk</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">poly_mod</span><span class="p">,</span> <span class="n">pt</span><span class="p">):</span>
+    <span class="sd">"""Encrypt an integer.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        pk: public-key.</span>
+<span class="sd">        size: size of polynomials.</span>
+<span class="sd">        q: ciphertext modulus.</span>
+<span class="sd">        t: plaintext modulus.</span>
+<span class="sd">        poly_mod: polynomial modulus.</span>
+<span class="sd">        pt: integer to be encrypted.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Tuple representing a ciphertext.      </span>
+<span class="sd">    """</span>
+    <span class="sd">"""</span>
+<span class="sd">    e1 = gen_normal_poly(size)</span>
+<span class="sd">    e2 = gen_normal_poly(size)</span>
+<span class="sd">    u = gen_binary_poly(size)</span>
+<span class="sd">    """</span>
+    <span class="c1"># encode the integer into a plaintext polynomial</span>
+    <span class="c1"># m = np.array([pt] + [0] * (size - 1), dtype=np.int64) % t</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">pt</span> <span class="o">%</span><span class="k">t</span>
+    <span class="n">delta</span> <span class="o">=</span> <span class="n">q</span> <span class="o">//</span> <span class="n">t</span>
+    <span class="n">scaled_m</span> <span class="o">=</span> <span class="n">m</span> <span class="o">*</span> <span class="n">delta</span>  <span class="o">%</span> <span class="n">q</span>
+    
+    <span class="n">ct0</span> <span class="o">=</span> <span class="n">polyadd</span><span class="p">(</span>
+            <span class="n">polyadd</span><span class="p">(</span>
+                <span class="n">polymul</span><span class="p">(</span><span class="n">pk</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">u</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">poly_mod</span><span class="p">),</span>
+                <span class="n">e1</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">poly_mod</span><span class="p">),</span>
+            <span class="n">scaled_m</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">poly_mod</span>
+        <span class="p">)</span>
+    <span class="n">ct1</span> <span class="o">=</span> <span class="n">polyadd</span><span class="p">(</span>
+            <span class="n">polymul</span><span class="p">(</span><span class="n">pk</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">u</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">poly_mod</span><span class="p">),</span>
+            <span class="n">e2</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">poly_mod</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">ct0</span><span class="p">,</span> <span class="n">ct1</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">decrypt</span><span class="p">(</span><span class="n">sk</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">poly_mod</span><span class="p">,</span> <span class="n">ct</span><span class="p">):</span>
+    <span class="sd">"""Decrypt a ciphertext</span>
+<span class="sd">    Args:</span>
+<span class="sd">        sk: secret-key.</span>
+<span class="sd">        size: size of polynomials.</span>
+<span class="sd">        q: ciphertext modulus.</span>
+<span class="sd">        t: plaintext modulus.</span>
+<span class="sd">        poly_mod: polynomial modulus.</span>
+<span class="sd">        ct: ciphertext.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Integer representing the plaintext.#   </span>
+<span class="sd">        """</span>
+    <span class="n">scaled_pt</span> <span class="o">=</span> <span class="n">polyadd</span><span class="p">(</span>
+            <span class="n">polymul</span><span class="p">(</span><span class="n">ct</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">sk</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">poly_mod</span><span class="p">),</span>
+            <span class="n">ct</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">q</span><span class="p">,</span> <span class="n">poly_mod</span>
+        <span class="p">)</span>
+    <span class="n">decrypted_poly</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">scaled_pt</span> <span class="o">*</span> <span class="n">t</span> <span class="o">/</span> <span class="n">q</span><span class="p">)</span> <span class="o">%</span> <span class="n">t</span>
+    <span class="c1"># return int(decrypted_poly[0])</span>
+    <span class="k">return</span>  <span class="p">(</span><span class="n">decrypted_poly</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="mi">2</span>
+<span class="n">e1</span> <span class="o">=</span> <span class="n">gen_normal_poly</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+<span class="n">e2</span> <span class="o">=</span> <span class="n">gen_normal_poly</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+<span class="n">u</span> <span class="o">=</span> <span class="n">gen_binary_poly</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+<span class="c1"># polynomial modulus degree</span>
+<span class="n">n</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">2</span>
+<span class="c1"># ciphertext modulus</span>
+<span class="n">q</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">15</span>
+<span class="c1"># plaintext modulus</span>
+<span class="n">t</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">8</span>
+<span class="c1"># polynomial modulus</span>
+<span class="n">poly_mod</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="c1"># Keygen</span>
+<span class="n">sk</span> <span class="o">=</span> <span class="n">gen_binary_poly</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+<span class="n">modulus</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">15</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">gen_uniform_poly</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">modulus</span><span class="p">)</span>
+<span class="n">e</span> <span class="o">=</span> <span class="n">gen_normal_poly</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+<span class="n">pk</span><span class="p">,</span> <span class="n">sk</span> <span class="o">=</span> <span class="n">keygen</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">poly_mod</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">ct1</span> <span class="o">=</span> <span class="n">encrypt</span><span class="p">(</span><span class="n">pk</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">poly_mod</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="mi">32</span><span class="p">,</span><span class="mi">22</span><span class="p">,</span>   <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">23</span><span class="p">]))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ct1</span><span class="p">)</span>
+<span class="n">decrypted_ct1</span> <span class="o">=</span> <span class="n">decrypt</span><span class="p">(</span><span class="n">sk</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">poly_mod</span><span class="p">,</span> <span class="n">ct1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">decrypted_ct1</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>(array([29281, 29854,  2994, 15207]), array([23343,  7572, 16473,  1144]))
+[ 32.  22.   0. 233.]
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">ct2</span><span class="o">=</span> <span class="p">(</span><span class="n">ct1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">ct1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">ct1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">ct1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ct2</span><span class="p">)</span>
+<span class="n">decrypted_ct2</span> <span class="o">=</span> <span class="n">decrypt</span><span class="p">(</span><span class="n">sk</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">poly_mod</span><span class="p">,</span> <span class="n">ct2</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">decrypted_ct2</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>(array([58562, 59708,  5988, 30414]), array([58562, 59708,  5988, 30414]))
+[219. 128. 221. 184.]
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">gen_binary_poly</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+    <span class="sd">"""Generates a polynomial with coeffecients in [0, 1]</span>
+<span class="sd">    Args:</span>
+<span class="sd">        size: number of coeffcients, size-1 being the degree of the</span>
+<span class="sd">            polynomial.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        array of coefficients with the coeff[i] being </span>
+<span class="sd">        the coeff of x ^ i.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">gen_uniform_poly</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">modulus</span><span class="p">):</span>
+    <span class="sd">"""Generates a polynomial with coeffecients being integers in Z_modulus</span>
+<span class="sd">    Args:</span>
+<span class="sd">        size: number of coeffcients, size-1 being the degree of the</span>
+<span class="sd">            polynomial.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        array of coefficients with the coeff[i] being </span>
+<span class="sd">        the coeff of x ^ i.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">modulus</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">gen_normal_poly</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+    <span class="sd">"""Generates a polynomial with coeffecients in a normal distribution</span>
+<span class="sd">    of mean 0 and a standard deviation of 2, then discretize it.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        size: number of coeffcients, size-1 being the degree of the</span>
+<span class="sd">            polynomial.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        array of coefficients with the coeff[i] being </span>
+<span class="sd">        the coeff of x ^ i.</span>
+<span class="sd">    """</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span>    <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([ 0,  0,  2, -1, -2])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">math</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([-0.15210849, -1.40642172, -0.50763401, -0.31183585,  1.27311431])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">an_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">double</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+
+  <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="mi">2</span>
+
+
+<span class="n">mapped_array</span> <span class="o">=</span> <span class="n">double</span><span class="p">(</span><span class="n">an_array</span><span class="p">)</span>
+
+
+<span class="nb">print</span><span class="p">(</span><span class="n">mapped_array</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>[2 4 6]
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">numpy.polynomial</span> <span class="kn">import</span> <span class="n">polynomial</span> <span class="k">as</span> <span class="n">poly</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="c1"># Create a function that adds 100 to something</span>
+<span class="n">add_100</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">100</span>
+
+<span class="c1"># Create a vectorized function</span>
+
+
+<span class="k">def</span> <span class="nf">randomZO</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="p">:</span>
+  <span class="n">lookup</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+  <span class="k">return</span> <span class="n">lookup</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+  <span class="c1">#given p=0.5 create q = 1/p so 2 create array 2q with middle elements 0 and 0 otherwise -1 and 1. change rndint to be 0,2q</span>
+  <span class="c1">#So p = 0.25 q = 4 array 11100111</span>
+
+<span class="k">def</span> <span class="nf">randomZOinverse</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="p">:</span>
+  <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">:</span>
+         <span class="k">return</span> <span class="mi">0</span>
+  <span class="k">return</span> <span class="mi">1</span>
+  
+
+<span class="n">qmod</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">10</span>
+<span class="n">P</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">8</span>
+
+<span class="n">poly_mod</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">ZOgenerator</span><span class="p">(</span>  <span class="p">):</span>
+  <span class="n">vectorized_ZO</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="n">randomZO</span><span class="p">)</span>
+  <span class="n">vectorized_ZOinverse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="n">randomZOinverse</span><span class="p">)</span>
+  <span class="n">sa</span> <span class="o">=</span> <span class="n">vectorized_ZO</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+  <span class="n">sai</span> <span class="o">=</span> <span class="n">vectorized_ZOinverse</span><span class="p">(</span><span class="n">sa</span><span class="p">)</span>
+  <span class="k">while</span> <span class="ow">not</span><span class="p">((</span><span class="mi">2</span> <span class="o">==</span> <span class="p">(</span><span class="n">sai</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="p">)</span> <span class="p">:</span>
+    <span class="n">sa</span> <span class="o">=</span> <span class="n">vectorized_ZO</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+    <span class="n">sai</span> <span class="o">=</span> <span class="n">vectorized_ZOinverse</span><span class="p">(</span><span class="n">sa</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">sa</span>
+  
+<span class="n">s</span> <span class="o">=</span> <span class="n">ZOgenerator</span><span class="p">()</span>
+<span class="n">sk</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">s</span><span class="p">)</span> <span class="c1">#</span>
+
+<span class="n">ea</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="n">ea</span><span class="p">)</span>
+<span class="n">qmodsmall</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">aa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">qmodsmall</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="n">aa</span><span class="p">)</span>
+
+
+<span class="n">b1</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polymul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">s</span><span class="p">)</span>
+
+<span class="n">b2q</span><span class="p">,</span><span class="n">b2r</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polydiv</span><span class="p">(</span><span class="n">b1</span><span class="o">%</span><span class="k">qmod</span>,poly_mod) 
+<span class="c1">#print("b2r")</span>
+<span class="c1">#print(b2r)</span>
+<span class="n">b3</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polyadd</span><span class="p">(</span><span class="n">e</span><span class="p">,</span><span class="o">-</span><span class="n">b2r</span><span class="o">%</span><span class="k">qmod</span>)
+<span class="n">b4q</span><span class="p">,</span><span class="n">b4r</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polydiv</span><span class="p">(</span><span class="n">b3</span><span class="o">%</span><span class="k">qmod</span>,poly_mod)
+<span class="n">b</span> <span class="o">=</span> <span class="n">b4r</span>
+<span class="n">pk</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="n">a</span><span class="p">)</span>
+
+<span class="c1">#validation key</span>
+<span class="n">PQ</span> <span class="o">=</span> <span class="n">P</span><span class="o">*</span><span class="n">qmod</span>
+
+<span class="n">av</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">qmodsmall</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">ev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">b1</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polymul</span><span class="p">(</span><span class="n">av</span><span class="p">,</span><span class="n">s</span><span class="p">)</span>
+
+<span class="n">b2q</span><span class="p">,</span><span class="n">b2r</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polydiv</span><span class="p">(</span><span class="n">b1</span><span class="o">%</span><span class="k">PQ</span>,poly_mod) 
+<span class="c1">#print("b2r")</span>
+<span class="c1">#print(b2r)</span>
+<span class="n">b3</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polyadd</span><span class="p">(</span><span class="n">e</span><span class="p">,</span><span class="o">-</span><span class="n">b2r</span><span class="o">%</span><span class="k">PQ</span>)
+<span class="n">b4q</span><span class="p">,</span><span class="n">b4r</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polydiv</span><span class="p">(</span><span class="n">b3</span><span class="o">%</span><span class="k">PQ</span>,poly_mod)
+<span class="n">Ps2</span> <span class="o">=</span> <span class="n">P</span><span class="o">*</span><span class="p">(</span><span class="n">poly</span><span class="o">.</span><span class="n">polymul</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="n">s</span><span class="p">))</span>
+<span class="n">b5</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polyadd</span><span class="p">(</span><span class="n">b3</span><span class="p">,</span><span class="n">Ps2</span><span class="p">)</span>  <span class="c1">#br4</span>
+<span class="n">b6q</span><span class="p">,</span><span class="n">b6r</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polydiv</span><span class="p">(</span><span class="n">b5</span><span class="o">%</span><span class="k">PQ</span>,poly_mod)
+<span class="n">bv</span> <span class="o">=</span> <span class="n">b6r</span>
+<span class="n">evk</span> <span class="o">=</span> <span class="p">(</span><span class="n">bv</span><span class="p">,</span><span class="n">av</span><span class="p">)</span>
+
+
+<span class="c1">#encrypt</span>
+
+<span class="k">def</span> <span class="nf">ckksencrypt</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+  <span class="n">v</span> <span class="o">=</span> <span class="n">ZOgenerator</span><span class="p">()</span>
+  <span class="n">e0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="mi">4</span><span class="p">)</span>
+  <span class="n">e1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="mi">4</span><span class="p">)</span>
+  <span class="n">c0a</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polymul</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+  <span class="n">c0b</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polyadd</span><span class="p">(</span><span class="n">c0a</span><span class="p">,</span><span class="n">e0</span><span class="p">)</span>
+  <span class="n">c0c</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polyadd</span><span class="p">(</span><span class="n">c0b</span><span class="p">,</span><span class="n">m</span><span class="p">)</span>
+  <span class="n">c0q</span><span class="p">,</span><span class="n">c0r</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polydiv</span><span class="p">(</span><span class="n">c0c</span><span class="o">%</span><span class="k">qmod</span>,poly_mod)
+  <span class="n">c0</span> <span class="o">=</span> <span class="n">c0r</span><span class="o">%</span><span class="k">qmod</span>
+  <span class="n">c1a</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polymul</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">a</span><span class="p">)</span>
+  <span class="n">c1b</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polyadd</span><span class="p">(</span><span class="n">c1a</span><span class="p">,</span><span class="n">e1</span><span class="p">)</span>
+  <span class="n">c1q</span><span class="p">,</span><span class="n">c1r</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polydiv</span><span class="p">(</span><span class="n">c1b</span><span class="o">%</span><span class="k">qmod</span>,poly_mod)
+  <span class="n">c1</span> <span class="o">=</span> <span class="n">c1r</span><span class="o">%</span><span class="k">qmod</span> 
+  <span class="k">return</span> <span class="p">(</span><span class="n">c0</span><span class="p">,</span><span class="n">c1</span><span class="p">)</span>
+
+<span class="c1">#decrypt</span>
+<span class="k">def</span> <span class="nf">ckksdecrypt</span><span class="p">(</span><span class="n">c0</span><span class="p">,</span><span class="n">c1</span><span class="p">,</span><span class="n">s</span><span class="p">)</span> <span class="p">:</span>
+ <span class="n">dq</span><span class="p">,</span><span class="n">dr</span><span class="o">=</span><span class="n">poly</span><span class="o">.</span><span class="n">polydiv</span><span class="p">(</span><span class="n">poly</span><span class="o">.</span><span class="n">polyadd</span><span class="p">(</span><span class="n">c0</span><span class="p">,</span><span class="n">poly</span><span class="o">.</span><span class="n">polymul</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span><span class="n">s</span><span class="p">))</span><span class="o">%</span><span class="k">qmod</span>,poly_mod)
+ <span class="n">dm</span> <span class="o">=</span> <span class="n">dr</span> <span class="o">%</span> <span class="n">qmod</span>
+ <span class="c1">#print("s a b c0 c1 dm")</span>
+ <span class="c1">#print(s,a,b)</span>
+ <span class="c1">#print(c0,c1)</span>
+ <span class="c1">#print(dm)</span>
+ <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">dm</span><span class="p">))</span>
+<span class="c1">#</span>
+<span class="n">m0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">30</span><span class="p">,</span><span class="mi">40</span><span class="p">,</span><span class="mi">50</span><span class="p">,</span><span class="mi">60</span><span class="p">])</span>
+<span class="n">m2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">60</span><span class="p">,</span><span class="mi">50</span><span class="p">,</span><span class="mi">40</span><span class="p">,</span><span class="mi">30</span><span class="p">])</span>
+
+<span class="n">gc0</span><span class="p">,</span><span class="n">gc1</span> <span class="o">=</span> <span class="n">ckksencrypt</span><span class="p">(</span><span class="n">m0</span><span class="p">)</span>
+<span class="n">gc2</span><span class="p">,</span><span class="n">gc3</span> <span class="o">=</span> <span class="n">ckksencrypt</span><span class="p">(</span><span class="n">m2</span><span class="p">)</span>
+<span class="n">gs</span> <span class="o">=</span> <span class="n">s</span>
+<span class="n">gc4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">gc0</span><span class="p">,</span><span class="n">gc2</span><span class="p">)</span>
+<span class="n">gc5</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">gc1</span><span class="p">,</span><span class="n">gc3</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ckksdecrypt</span><span class="p">(</span><span class="n">gc0</span><span class="p">,</span><span class="n">gc1</span><span class="p">,</span><span class="n">gs</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ckksdecrypt</span><span class="p">(</span><span class="n">gc2</span><span class="p">,</span><span class="n">gc3</span><span class="p">,</span><span class="n">gs</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ckksdecrypt</span><span class="p">(</span><span class="n">gc4</span><span class="p">,</span><span class="n">gc5</span><span class="p">,</span><span class="n">gs</span><span class="p">))</span>
+<span class="n">d0m</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polymul</span><span class="p">(</span><span class="n">gc0</span><span class="p">,</span><span class="n">gc2</span><span class="p">)</span>
+<span class="n">d0q</span><span class="p">,</span><span class="n">d0r</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polydiv</span><span class="p">(</span><span class="n">d0m</span><span class="p">,</span><span class="n">poly_mod</span><span class="p">)</span>
+<span class="n">d0</span> <span class="o">=</span> <span class="n">d0r</span>
+<span class="n">d1ma</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polymul</span><span class="p">(</span><span class="n">gc0</span><span class="p">,</span><span class="n">gc3</span><span class="p">)</span>
+<span class="n">d1mb</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polymul</span><span class="p">(</span><span class="n">gc1</span><span class="p">,</span><span class="n">gc2</span><span class="p">)</span>
+<span class="n">d1m</span> <span class="o">=</span><span class="n">poly</span><span class="o">.</span><span class="n">polyadd</span><span class="p">(</span><span class="n">d1ma</span><span class="p">,</span><span class="n">d1mb</span><span class="p">)</span>
+<span class="n">d1q</span><span class="p">,</span><span class="n">d1r</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polydiv</span><span class="p">(</span><span class="n">d1m</span><span class="p">,</span><span class="n">poly_mod</span><span class="p">)</span>
+<span class="n">d1</span> <span class="o">=</span> <span class="n">d1r</span>
+<span class="n">d2m</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polymul</span><span class="p">(</span><span class="n">gc1</span><span class="p">,</span><span class="n">gc3</span><span class="p">)</span>
+<span class="n">d2q</span><span class="p">,</span><span class="n">d2r</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polydiv</span><span class="p">(</span><span class="n">d2m</span><span class="p">,</span><span class="n">poly_mod</span><span class="p">)</span>
+<span class="n">d2</span> <span class="o">=</span> <span class="n">d2r</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">d0</span><span class="p">,</span><span class="n">d1</span><span class="p">,</span><span class="n">d2</span><span class="p">)</span>
+<span class="nb">print</span> <span class="p">(</span><span class="s2">"evk"</span><span class="p">)</span>
+<span class="nb">print</span> <span class="p">(</span><span class="n">evk</span><span class="p">)</span>
+<span class="n">d2evk0</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polymul</span><span class="p">(</span><span class="n">d2</span><span class="p">,</span><span class="n">bv</span><span class="p">)</span><span class="o">%</span><span class="k">qmod</span>
+<span class="n">d2evk1</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polymul</span><span class="p">(</span><span class="n">d2</span><span class="p">,</span><span class="n">av</span><span class="p">)</span><span class="o">%</span><span class="k">qmod</span>
+<span class="n">d2evk0q</span><span class="p">,</span><span class="n">d2evk0r</span> <span class="o">=</span> <span class="p">(</span><span class="n">poly</span><span class="o">.</span><span class="n">polydiv</span><span class="p">(</span><span class="n">d2evk0</span><span class="p">,</span><span class="n">poly_mod</span><span class="p">))</span>
+<span class="n">d2evk1q</span><span class="p">,</span><span class="n">d2evk1r</span> <span class="o">=</span> <span class="p">(</span><span class="n">poly</span><span class="o">.</span><span class="n">polydiv</span><span class="p">(</span><span class="n">d2evk1</span><span class="p">,</span><span class="n">poly_mod</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"d2ev"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">d2evk0r</span><span class="p">,</span><span class="n">d2evk1r</span><span class="p">)</span>
+<span class="n">d2a0</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polyadd</span><span class="p">(</span><span class="n">d0</span><span class="p">,</span><span class="n">d2evk0r</span><span class="o">/</span><span class="n">P</span><span class="p">)</span>
+<span class="n">d2a1</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polyadd</span><span class="p">(</span><span class="n">d1</span><span class="p">,</span><span class="n">d2evk1r</span><span class="o">/</span><span class="n">P</span><span class="p">)</span>
+<span class="n">d2a0q</span><span class="p">,</span><span class="n">d2a0r</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polydiv</span><span class="p">(</span><span class="n">d2a0</span><span class="o">%</span><span class="k">qmod</span>,poly_mod)
+<span class="n">d2a1q</span><span class="p">,</span><span class="n">d2a1r</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">polydiv</span><span class="p">(</span><span class="n">d2a1</span><span class="o">%</span><span class="k">qmod</span>,poly_mod)
+<span class="n">gc6</span> <span class="o">=</span><span class="n">d2a0r</span>
+<span class="n">gc7</span> <span class="o">=</span> <span class="n">d2a1r</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"decrypt mult"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ckksdecrypt</span><span class="p">(</span><span class="n">gc6</span><span class="p">,</span><span class="n">gc7</span><span class="p">,</span><span class="n">gs</span><span class="p">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>[27. 38. 47. 62.]
+[59. 52. 35. 33.]
+[85. 90. 83. 95.]
+[-4256.04489788   119.78987288  4447.73982358  8308.64367718] [-64520.64643198  24433.53648975 125827.70150041 143102.38467171] [-7066.59732099  4688.89450294 15407.15132969 15943.79869264]
+evk
+(array([ 2.61631816e+05,  2.62142369e+05, -1.98992018e+00,  2.62143947e+05]), array([1, 1, 0, 0]))
+d2ev
+[-225.80957222 -931.77543116   16.27155685  244.74714661] [-482.39601362  694.29718196  640.04583264  630.95002233]
+decrypt mult
+[ 234.  227.  467. 1009.]
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+</div>
+
+
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="Conwyn/MyBlogs"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/MyBlogs/fastai/fhe/ckks/2021/05/22/CKKS.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/MyBlogs/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/MyBlogs/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/MyBlogs/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>An easy to use blogging platform with support for Jupyter Notebooks.</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/fastai" title="fastai"><svg class="svg-icon grey"><use xlink:href="/MyBlogs/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/fastdotai" title="fastdotai"><svg class="svg-icon grey"><use xlink:href="/MyBlogs/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
